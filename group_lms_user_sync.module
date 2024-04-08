@@ -1,0 +1,32 @@
+<?php
+
+/**
+ * @file
+ * Allows you to group users, content and other entities.
+ */
+
+use Drupal\Component\Utility\Html;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\group\Entity\GroupRelationshipInterface;
+use Drupal\group\Entity\GroupInterface;
+use Drupal\Core\State\StateInterface;
+use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+
+/**
+ * Implements hook_cron().
+ */
+function group_lms_user_sync_cron() {
+}
+
+/**
+ * Implements hook_cron_queue_info().
+ */
+function group_lms_user_sync_cron_queue_info() {
+}
+
+/**
+ * Worker callback for the daily task.
+ */
+function group_lms_user_sync_daily_task_worker($data) {
+}
