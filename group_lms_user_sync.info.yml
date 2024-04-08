@@ -4,7 +4,8 @@ package: 'Group'
 type: 'module'
 core_version_requirement: ^9.5 || ^10
 dependencies:
-  - 'drupal:groups'
+  - 'drupal:group'
+  - 'drupal:key'
   - 'drupal:options'
   - 'entity:entity'
   - 'flexible_permissions:flexible_permissions'

@@ -19,6 +19,7 @@
     "require": {
       "drupal/core": "^9.5 || ^10",
       "drupal/group": "^3.2",
+      "drupal/key": "^1.17",
       "drupal/entity": "^1.2",
       "drupal/flexible_permissions": "^1.0"
     }
