@@ -3,6 +3,6 @@ group.settings:
   path: '/admin/group/settings-lms-user-sync'
   defaults:
     _form: '\Drupal\group_lms_user_sync\Form\GroupLMSUserSyncSettingsForm'
-    _title: 'Group settings'
+    _title: 'Group LMS Usere Sync Settings'
   requirements:
     _permission: 'administer group'
