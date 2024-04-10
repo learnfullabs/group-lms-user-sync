@@ -6,15 +6,15 @@ use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
- * Class GroupSettingsForm.
+ * Class GroupLMSUserSyncSettingsForm.
  */
-class GroupSettingsForm extends ConfigFormBase {
+class GroupLMSUserSyncSettingsForm extends ConfigFormBase {
 
   /**
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'group_settings';
+    return 'group_lms_user_sync_settings';
   }
 
   /**
