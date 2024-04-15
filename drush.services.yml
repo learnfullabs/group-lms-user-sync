@@ -1,0 +1,5 @@
+services:
+  group_lms_user_sync.commands:
+    class: \Drupal\group_lms_user_sync\Drush\DrushCommands
+    tags:
+      - { name: drush.command }

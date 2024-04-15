@@ -1,9 +1,12 @@
 id: test_lms_rest_endpoint_config
 plugin_id: test_lms_rest_endpoint
-granularity: method
+granularity: resource
 configuration:
-  GET:
-    supported_formats:
-      - json
-    supported_auth:
-      - basic_auth
+  methods:
+    - GET
+  formats:
+    - json
+    - hal_json
+    - xml
+  authentication:
+    - cookie

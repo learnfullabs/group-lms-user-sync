@@ -12,7 +12,7 @@ use Drupal\rest\ResourceResponse;
  *   id = "test_lms_rest_endpoint",
  *   label = @Translation("Test LMS Rest Endpoint"),
  *   uri_paths = {
- *     "canonical" = "/group-lms/test_lms_rest_endpoint"
+ *     "canonical" = "/group_lms/test_lms_rest_endpoint"
  *   }
  * )
  */
