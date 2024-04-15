@@ -1,0 +1,7 @@
+name: 'Group LMS Rest Endpoint'
+description: 'Enables a test Endpoint that returns class information'
+package: 'Group'
+type: 'module'
+core_version_requirement: ^9.5 || ^10
+dependencies:
+  - 'group_lms_user_sync:group_lms_user_sync'
