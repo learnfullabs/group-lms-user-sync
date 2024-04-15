@@ -3,6 +3,7 @@ description: 'Uses the group module to sync external LMS Nodes/Users/Groups into
 package: 'Group'
 type: 'module'
 core_version_requirement: ^9.5 || ^10
+configure: 'group_lms_user_sync.settings'
 dependencies:
   - 'drupal:group'
   - 'drupal:key'
