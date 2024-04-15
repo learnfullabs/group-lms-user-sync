@@ -1,0 +1,9 @@
+id: test_lms_rest_endpoint_config
+plugin_id: test_lms_rest_endpoint
+granularity: method
+configuration:
+  GET:
+    supported_formats:
+      - json
+    supported_auth:
+      - basic_auth
