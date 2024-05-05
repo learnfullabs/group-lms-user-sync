@@ -1,5 +1,4 @@
-id: test_lms_rest_endpoint_config
-plugin_id: test_lms_rest_endpoint
+id: group_lms_rest_get_classlist
 granularity: resource
 configuration:
   methods:
