@@ -1,0 +1,30 @@
+[
+  {
+    "Identifier": "342352",
+    "ProfileIdentifier": "student1",
+    "DisplayName": "student1",
+    "Username": "student1",
+    "OrgDefinedId": 1,
+    "Email": "student1@ucla.com",
+    "FirstName": "Bob",
+    "LastName": "Doe",
+    "RoleId": "6",
+    "LastAccessed": "",
+    "IsOnline": "1",
+    "ClasslistRoleDisplayName": ""
+  },
+  {
+    "Identifier": "342352",
+    "ProfileIdentifier": "student1",
+    "DisplayName": "student1",
+    "Username": "student1",
+    "OrgDefinedId": 1,
+    "Email": "student1@ucla.com",
+    "FirstName": "Bob",
+    "LastName": "Doe",
+    "RoleId": "6",
+    "LastAccessed": "",
+    "IsOnline": "1",
+    "ClasslistRoleDisplayName": ""
+  }
+]
