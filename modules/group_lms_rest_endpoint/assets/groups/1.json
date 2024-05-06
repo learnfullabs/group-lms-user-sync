@@ -14,15 +14,15 @@
     "ClasslistRoleDisplayName": ""
   },
   {
-    "Identifier": "342352",
-    "ProfileIdentifier": "student1",
-    "DisplayName": "student1",
-    "Username": "student1",
+    "Identifier": "342142",
+    "ProfileIdentifier": "student2",
+    "DisplayName": "student2",
+    "Username": "student2",
     "OrgDefinedId": 1,
-    "Email": "student1@ucla.com",
-    "FirstName": "Bob",
-    "LastName": "Doe",
-    "RoleId": "6",
+    "Email": "student2@ucla.com",
+    "FirstName": "Jane",
+    "LastName": "Harris",
+    "RoleId": "3",
     "LastAccessed": "",
     "IsOnline": "1",
     "ClasslistRoleDisplayName": ""
