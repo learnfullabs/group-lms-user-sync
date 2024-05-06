@@ -1,0 +1,30 @@
+[
+  {
+    "Identifier": "305171",
+    "ProfileIdentifier": "computerwiz",
+    "DisplayName": "computerwiz",
+    "Username": "computerwiz",
+    "OrgDefinedId": 3,
+    "Email": "computerwiz@ucla.com",
+    "FirstName": "Steve",
+    "LastName": "Hics",
+    "RoleId": "3",
+    "LastAccessed": "",
+    "IsOnline": "1",
+    "ClasslistRoleDisplayName": ""
+  },
+  {
+    "Identifier": "305006",
+    "ProfileIdentifier": "c_codesupport",
+    "DisplayName": "c_codesupport",
+    "Username": "c_codesupport",
+    "OrgDefinedId": 3,
+    "Email": "codesupport@ucla.com",
+    "FirstName": "Mauri",
+    "LastName": "Quiroz",
+    "RoleId": "3",
+    "LastAccessed": "",
+    "IsOnline": "1",
+    "ClasslistRoleDisplayName": ""
+  }
+]
