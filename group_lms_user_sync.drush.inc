@@ -14,6 +14,7 @@ function group_lms_user_sync_drush_command() {
   $items['group-lms-sync-users-groups'] = [
     'description' => 'Sync users/class groups from the LMI endpoint.',
     'aliases' => [
+      'gl-us',
       'gl:user-sync'
     ],
   ];

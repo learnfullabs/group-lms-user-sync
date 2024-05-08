@@ -16,7 +16,7 @@ class DrushCommands {
    * @aliases gl-us
    * @usage gl-us
    */
-  public function syncUsersGroups($order_id = NULL) {
+  public function syncUsersGroups() {
   }
 
 }
