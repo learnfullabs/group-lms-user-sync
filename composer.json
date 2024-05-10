@@ -1,27 +1,9 @@
 {
-    "name": "drupal/group_lms_user_sync",
-    "type": "drupal-module",
-    "description": "Uses the group module to sync external LMS Nodes/Users/Groups into the site",
-    "homepage": "https://drupal.org/project/group_lms_user_sync",
-    "authors": [
-      {
-        "name": "Daniel Rodriguez",
-        "homepage": "https://www.drupal.org/u/danrod",
-        "role": "Maintainer"
-      }
-    ],
-    "support": {
-      "issues": "https://drupal.org/project/issues/group_lms_user_sync",
-      "source": "https://git.drupalcode.org/project/group_lms_user_sync"
-    },
-    "license": "GPL-2.0-or-later",
-    "minimum-stability": "dev",
-    "require": {
-      "drupal/core": "^9.5 || ^10",
-      "drupal/group": "^3.2",
-      "drupal/key": "^1.17",
-      "drupal/entity": "^1.2",
-      "drupal/flexible_permissions": "^1.0"
-    }
-  }
+  "name": "learnfullabs/group-lms-user-sync",
+  "type": "drupal-custom-module",
+  "description": "Module group-lms-user-sync",
+  "homepage": "https://github.com/learnfullabs/group-lms-user-sync",
+  "license": "GPL-3.0+"
+}
+
   
