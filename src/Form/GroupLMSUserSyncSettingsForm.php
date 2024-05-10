@@ -38,6 +38,14 @@ class GroupLMSUserSyncSettingsForm extends ConfigFormBase {
       '#default_value' => $config->get('api_endpoint_info'),
     ];
 
+    $form['api_endpoint_version'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('API Version'),
+      '#default_value' => $config->get('api_endpoint_version'),
+      '#size' => 30,
+      '#description' => $this->t('Endpoint API Version: v1 or v2'),
+    ];
+
     return $form;
   }
 
@@ -48,11 +56,17 @@ class GroupLMSUserSyncSettingsForm extends ConfigFormBase {
     $config = $this->config('group_lms_user_sync.settings');
     $conf_api_endpoint_info = $config->get('api_endpoint_info');
     $form_api_endpoint_info = $form_state->getValue('api_endpoint_info');
+    $conf_api_endpoint_version = $config->get('api_endpoint_version');
+    $form_api_endpoint_version = $form_state->getValue('api_endpoint_version');
 
     // Only rebuild the routes if the api_endpoint_info switch has changed.
     if ($conf_api_endpoint_info != $form_api_endpoint_info) {
       $config->set('api_endpoint_info', $form_api_endpoint_info)->save();
       \Drupal::service('router.builder')->setRebuildNeeded();
+    }
+
+    if ($conf_api_endpoint_version != $form_api_endpoint_version) {
+      $config->set('api_endpoint_version', $form_api_endpoint_version)->save();
     }
 
     parent::submitForm($form, $form_state);
