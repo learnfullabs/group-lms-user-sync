@@ -49,7 +49,7 @@ class GroupLMSUserSyncCommands extends DrushCommands {
               $classroom = json_decode($request->getBody());
 
               foreach($classroom as $student) {
-                $this->io()->success('Student Identifier: ' . $request->Identifier);
+                $this->io()->success('Student Identifier: ' . $student->Identifier);
               }
             }
           } catch (\Exception $e) {
