@@ -28,26 +28,33 @@ class GroupLMSUserSyncCommands extends DrushCommands {
       // Use the keys API to get the Endpoint URL
       $endpoint_url = \Drupal::service('key.repository')->getKey($endpoint_id)->getKeyValue();
     
-      // Create a httpClient Object that will be used for all the requests.
-      $client = \Drupal::httpClient();
+      if (isset($endpoint_url) && !empty($endpoint_url)) {
+        // Create a httpClient Object that will be used for all the requests.
+        $client = \Drupal::httpClient();
 
-      // Pulling the data from the API
-      $group_ids = [1, 2, 3];
+        // Pulling the data from the API
+        $group_ids = [1, 2, 3];
 
-      foreach ($group_ids as $group_id) {
-        try {
-          $request = $client->get($endpoint_url . '/' . $api_version . '/' . $group_id . '/classlist/paged', [
-            'http_errors' => TRUE,
-            'query' => [
-              '_format' => 'json'
-            ]
-          ]);
-        
-          if (!empty($request)) {
-            $this->io()->success('Got data from the Endpoint !' . $request->getBody());
+        foreach ($group_ids as $group_id) {
+          try {
+            $request = $client->get($endpoint_url . '/' . $api_version . '/' . $group_id . '/classlist/paged', [
+              'http_errors' => TRUE,
+              'query' => [
+                '_format' => 'json'
+              ]
+            ]);
+          
+            if (!empty($request)) {
+              $this->io()->success('Got data from the Endpoint !' . $request->getBody());
+              $classroom = json_decode($request->getBody());
+
+              foreach($classroom as $student) {
+                $this->io()->success('Student Identifier: ' . $request->Identifier);
+              }
+            }
+          } catch (\Exception $e) {
+            watchdog_exception('group_lms_user_sync', $e);
           }
-        } catch (\Exception $e) {
-          watchdog_exception('group_lms_user_sync', $e);
         }
       }
     }
