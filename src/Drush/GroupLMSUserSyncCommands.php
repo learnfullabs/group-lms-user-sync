@@ -36,10 +36,15 @@ class GroupLMSUserSyncCommands extends DrushCommands {
 
       foreach ($group_ids as $group_id) {
         try {
-          $request = $client->get($endpoint_url . '/' . $api_version . '/' . $group_id . '/classlist/paged', ['http_errors' => FALSE]);
+          $request = $client->get($endpoint_url . '/' . $api_version . '/' . $group_id . '/classlist/paged', [
+            'http_errors' => TRUE,
+            'query' => [
+              '_format' => 'json'
+            ]
+          ]);
         
           if (!empty($request)) {
-            $this->io()->success('Got data from the Endpoint !' . $request);
+            $this->io()->success('Got data from the Endpoint !' . $request->getBody());
           }
         } catch (\Exception $e) {
           watchdog_exception('group_lms_user_sync', $e);
