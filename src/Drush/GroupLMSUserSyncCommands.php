@@ -52,7 +52,7 @@ class GroupLMSUserSyncCommands extends DrushCommands {
                 $this->io()->success('Student Identifier: ' . $student->Identifier);
                 /* First, check if the user (identified by Email or Username) exists, if not, create the user */
                 /* If it exists, enroll the user into the course identified by OrgDefinedId (OU field from the Group field) */
-                /*  */
+                /* Check for the RoleID field, should map to the Drupal User Role */
               }
             }
           } catch (\Exception $e) {
