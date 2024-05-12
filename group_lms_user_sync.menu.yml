@@ -2,5 +2,5 @@ group_lms_user_sync.settings:
   title: 'Group LMS User Sync Settings'
   description: 'Configure the group lms user sync settings.'
   route_name: 'group_lms_user_sync.settings'
-  parent: 'group.settings'
+  parent: 'system.admin_group'
   weight: 15
