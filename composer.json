@@ -3,7 +3,22 @@
   "type": "drupal-custom-module",
   "description": "Module group-lms-user-sync",
   "homepage": "https://github.com/learnfullabs/group-lms-user-sync",
-  "license": "GPL-3.0+"
+  "license": "GPL-2.0-or-later",
+  "minimum-stability": "dev",
+  "authors": [
+    {
+      "name": "Daniel Rodriguez",
+      "homepage": "https://www.drupal.org/u/danrod",
+      "role": "Maintainer"
+    }
+  ],
+  "require": {
+    "drupal/core": "^10"
+  },
+  "require-dev": {
+    "drupal/group": "^3.2",
+    "drupal/key": "^1.17"
+  }
 }
 
   
