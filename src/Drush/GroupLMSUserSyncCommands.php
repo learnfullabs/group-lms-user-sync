@@ -29,7 +29,7 @@ class GroupLMSUserSyncCommands extends DrushCommands {
       $endpoint_url = \Drupal::service('key.repository')->getKey($endpoint_id)->getKeyValue();
     
       if (isset($endpoint_url) && !empty($endpoint_url)) {
-        // Create a httpClient Object that will be used for all the requests.
+        // Create an httpClient Object that will be used for all the requests.
         $client = \Drupal::httpClient();
 
         // Pulling the data from the API
@@ -50,12 +50,17 @@ class GroupLMSUserSyncCommands extends DrushCommands {
 
               foreach($classroom as $student) {
                 $this->io()->success('Student Identifier: ' . $student->Identifier);
+                /* First, check if the user (identified by Email or Username) exists, if not, create the user */
+                /* If it exists, enroll the user into the course identified by OrgDefinedId (OU field from the Group field) */
+                /*  */
               }
             }
           } catch (\Exception $e) {
             watchdog_exception('group_lms_user_sync', $e);
           }
         }
+      } else {
+        $this->io()->error('Endpoint URL was not set');
       }
     }
 
