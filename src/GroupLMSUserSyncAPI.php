@@ -10,23 +10,44 @@ namespace Drupal\group_lms_user_sync;
 class GroupLMSUserSyncAPI {
 
   /**
-   * Constructor for the GroupLMSUserSyncAPI objects.
+   * Endpoint ID.
+   *
+   * @var string
    */
-  public function __construct() {
+  protected $endpoint_id;
+
+  /**
+   * URL of the LMS Rest Endpoint.
+   *
+   * @var string
+   */
+  protected $endpoint_url;
+
+  /**
+   * API Version.
+   *
+   * @var string
+   */
+  protected $api_version;
+
+  /**
+   * Constructs a new GroupLMSUserSyncAPI object.
+   *
+   * @param string $vocabulary_name
+   *   Vocabulary name where the terms will be created.
+   */
+  public function __construct(string $endpoint_id, string $endpoint_url, string $api_version) {
+    $this->endpoint_id = $endpoint_id;
+    $this->endpoint_url = $endpoint_url;
+    $this->api_version = $api_version;
   }
 
   /**
    * Sync users/class groups from the LMI AP Endpoint to the Drupal Groups.
    */
   public function syncUsersToGroups() {
-    $endpoint_id = \Drupal::config('group_lms_user_sync.settings')->get('api_endpoint_info') ?? "";
-    $api_version = "v1";
-
-    if (isset($endpoint_id) && !empty($endpoint_id)) {
-      // Use the keys API to get the Endpoint URL
-      $endpoint_url = \Drupal::service('key.repository')->getKey($endpoint_id)->getKeyValue();
-    
-      if (isset($endpoint_url) && !empty($endpoint_url)) {
+    if (isset($this->endpoint_id) && !empty($this->endpoint_id)) {    
+      if (isset($this->endpoint_url) && !empty($this->endpoint_url)) {
         // Create an httpClient Object that will be used for all the requests.
         $client = \Drupal::httpClient();
 
@@ -58,11 +79,14 @@ class GroupLMSUserSyncAPI {
           }
         }
       } else {
-        //$this->io()->error('Endpoint URL was not set');
+        // Endpoint URL was not set
+        return -1;
       }
+    } else {
+      
     }
 
-    //$this->io()->success('Synced users/group from the LMI Endpoint !' . $endpoint_url);
+    return 1;
   }
 
 }
