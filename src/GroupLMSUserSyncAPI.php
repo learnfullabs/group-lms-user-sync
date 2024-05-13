@@ -2,8 +2,6 @@
 
 namespace Drupal\group_lms_user_sync;
 
-use \Drush\Commands\DrushCommands;
-
 /**
  * GroupLMSUserSyncAPI.
  *
@@ -49,7 +47,7 @@ class GroupLMSUserSyncAPI {
               $classroom = json_decode($request->getBody());
 
               foreach($classroom as $student) {
-                $this->io()->success('Student Identifier: ' . $student->Identifier);
+                //$this->io()->success('Student Identifier: ' . $student->Identifier);
                 /* First, check if the user (identified by Email or Username) exists, if not, create the user */
                 /* If it exists, enroll the user into the course identified by OrgDefinedId (OU field from the Group field) */
                 /* Check for the RoleID field, should map to the Drupal User Role */
@@ -60,11 +58,11 @@ class GroupLMSUserSyncAPI {
           }
         }
       } else {
-        $this->io()->error('Endpoint URL was not set');
+        //$this->io()->error('Endpoint URL was not set');
       }
     }
 
-    $this->io()->success('Synced users/group from the LMI Endpoint !' . $endpoint_url);
+    //$this->io()->success('Synced users/group from the LMI Endpoint !' . $endpoint_url);
   }
 
 }
