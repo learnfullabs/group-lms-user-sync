@@ -43,7 +43,7 @@ class GroupLMSUserSyncAPI {
             ]);
           
             if (!empty($request)) {
-              $this->io()->success('Got data from the Endpoint !' . $request->getBody());
+              //$this->io()->success('Got data from the Endpoint !' . $request->getBody());
               $classroom = json_decode($request->getBody());
 
               foreach($classroom as $student) {
