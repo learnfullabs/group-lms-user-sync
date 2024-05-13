@@ -22,12 +22,13 @@ class GroupLMSUserSyncCommands extends DrushCommands {
    * @usage gl-us
    */
   public function syncUsersGroups() {
-    $drushHandler = new GroupLMSUSerSyncAPI();
     $endpoint_id = \Drupal::config('group_lms_user_sync.settings')->get('api_endpoint_info') ?? "";
     $api_version = "v1";
     $endpoint_url = \Drupal::service('key.repository')->getKey($endpoint_id)->getKeyValue();
+    
+    $drushHandler = new GroupLMSUSerSyncAPI($endpoint_id, $api_version, $endpoint_url);
 
-    $res = $drushHandler->syncUsersToGroups($endpoint_id, $api_version, $endpoint_url);
+    $res = $drushHandler->syncUsersToGroups();
 
     if ($res == 1) {
       $this->io()->success('Synced users/group from the LMI Endpoint !' . $endpoint_url);
