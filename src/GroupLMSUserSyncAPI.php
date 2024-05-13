@@ -18,7 +18,7 @@ class GroupLMSUserSyncAPI {
   /**
    * Sync users/class groups from the LMI AP Endpoint to the Drupal Groups.
    */
-  private function syncUsersToGroups() {
+  public function syncUsersToGroups() {
     $endpoint_id = \Drupal::config('group_lms_user_sync.settings')->get('api_endpoint_info') ?? "";
     $api_version = "v1";
 
