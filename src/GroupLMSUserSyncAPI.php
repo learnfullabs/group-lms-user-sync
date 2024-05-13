@@ -2,7 +2,7 @@
 
 namespace Drupal\group_lms_user_sync;
 
-use Drush\Commands\DrushCommands;
+use \Drush\Commands\DrushCommands;
 
 /**
  * GroupLMSUserSyncAPI.
