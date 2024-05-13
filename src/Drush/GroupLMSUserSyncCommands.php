@@ -31,7 +31,7 @@ class GroupLMSUserSyncCommands extends DrushCommands {
     $res = $drushHandler->syncUsersToGroups();
 
     if ($res == 1) {
-      $this->io()->success('Synced users/group from the LMI Endpoint !' . $endpoint_url);
+      $this->io()->success('Synced users/group from the LMI Endpoint ! ' . $endpoint_url);
     } else if ($res == -1) {
       $this->io()->error('Endpoint URL was not set');
     }

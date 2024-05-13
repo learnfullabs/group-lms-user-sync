@@ -2,6 +2,10 @@
 
 namespace Drupal\group_lms_user_sync;
 
+use Drupal\user\Entity\User;
+use Drupal\group\Entity\Group;
+use Drupal\group\Entity\GroupInterface;
+
 /**
  * GroupLMSUserSyncAPI.
  *
@@ -67,10 +71,30 @@ class GroupLMSUserSyncAPI {
               //$this->io()->success('Got data from the Endpoint !' . $request->getBody());
               $classroom = json_decode($request->getBody());
 
-              foreach($classroom as $student) {
-                //$this->io()->success('Student Identifier: ' . $student->Identifier);
+              foreach($classroom as $student) {                
                 /* First, check if the user (identified by Email or Username) exists, if not, create the user */
-                /* If it exists, enroll the user into the course identified by OrgDefinedId (OU field from the Group field) */
+                $user_obj = user_load_by_mail($student->Email);
+                $group_id_api = $student->OrgDefinedId;
+                $group_role_api = $student->RoleId;
+
+
+                if ($user_obj) {
+                  /* If it exists, enroll the user into the course identified by OrgDefinedId (OU field from the Group field) */
+                  $gids = \Drupal::entityQuery('group')
+                  ->condition('field_course_ou', $group_id_api)
+                  ->execute();
+
+                  if (count($nids)) {
+                    $group = Group::load(reset($gids));
+                    $group->addMember($user_obj);
+                  } else {
+                    // 
+                  }
+      
+                } else {
+
+                }
+
                 /* Check for the RoleID field, should map to the Drupal User Role */
               }
             }
