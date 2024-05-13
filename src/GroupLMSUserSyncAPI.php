@@ -56,7 +56,7 @@ class GroupLMSUserSyncAPI {
 
         foreach ($group_ids as $group_id) {
           try {
-            $request = $client->get($endpoint_url . '/' . $api_version . '/' . $group_id . '/classlist/paged', [
+            $request = $client->get($this->endpoint_url . '/' . $this->api_version . '/' . $group_id . '/classlist/paged', [
               'http_errors' => TRUE,
               'query' => [
                 '_format' => 'json'
@@ -83,7 +83,7 @@ class GroupLMSUserSyncAPI {
         return -1;
       }
     } else {
-      
+
     }
 
     return 1;
