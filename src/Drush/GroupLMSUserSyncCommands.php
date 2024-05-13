@@ -2,8 +2,8 @@
 
 namespace Drupal\group_lms_user_sync\Drush;
 
+use Drupal\group_lms_user_sync\GroupLMSUserSyncAPI;
 use Drush\Commands\DrushCommands;
-use Drush\group_lms_user_sync\GroupLMSUserSyncAPI;
 
 /**
  * Class GroupLMSUserSyncCommands.
