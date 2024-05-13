@@ -25,8 +25,8 @@ class GroupLMSUserSyncCommands extends DrushCommands {
     $endpoint_id = \Drupal::config('group_lms_user_sync.settings')->get('api_endpoint_info') ?? "";
     $api_version = "v1";
     $endpoint_url = \Drupal::service('key.repository')->getKey($endpoint_id)->getKeyValue();
-    
-    $drushHandler = new GroupLMSUSerSyncAPI($endpoint_id, $api_version, $endpoint_url);
+
+    $drushHandler = new GroupLMSUSerSyncAPI($endpoint_id, $endpoint_url, $api_version);
 
     $res = $drushHandler->syncUsersToGroups();
 
