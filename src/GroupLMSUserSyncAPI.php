@@ -92,6 +92,12 @@ class GroupLMSUserSyncAPI {
                   if (count($gids)) {
                     foreach ($gids as $gid) {
                       $group = Group::load($gid);
+
+                      if (!$group) {
+                        \Drupal::logger('group_lms_user_sync')->error("Failed to load group identified by Group API ID @groupname", ['@groupname' => $group_id_api ]);
+                        continue;
+                      }
+
                       $group->addMember($user_obj);
                       $count_updated_groups[$user_id_api] = $group->id();
                       $group_name = $group->label();
@@ -131,6 +137,12 @@ class GroupLMSUserSyncAPI {
                     if (count($gids)) {
                       foreach ($gids as $gid) {
                         $group = Group::load($gid);
+
+                        if (!$group) {
+                          \Drupal::logger('group_lms_user_sync')->error("Failed to load group identified by Group API ID @groupname", ['@groupname' => $group_id_api ]);
+                          continue;
+                        }
+
                         $group->addMember($user_new);
                         $count_updated_groups[$user_id_api] = $group->id();
                         $group_name = $group->label();
@@ -141,8 +153,7 @@ class GroupLMSUserSyncAPI {
                     }
 
                   } catch (\Exception $e) {
-                    \Drupal::messenger()->addMessage('Fail to register user:' . $username_api, 'error' );
-                    \Drupal::logger('group_lms_user_sync')->error("Fail to register user @username", ['@username' => $username_api ]);
+                    \Drupal::logger('group_lms_user_sync')->error("Failed to register user @username", ['@username' => $username_api ]);
                     watchdog_exception('group_lms_user_sync', $e);
                   }
 
