@@ -86,7 +86,7 @@ class GroupLMSUserSyncAPI {
                   /* If it exists, enroll the user into the course identified by OrgDefinedId (OU field from the Group field) */
                   $gids = \Drupal::entityQuery('group')
                   ->condition('field_course_ou', $group_id_api)
-                  ->accessCheck(TRUE)
+                  ->accessCheck(FALSE)
                   ->execute();
 
                   if (count($gids)) {
@@ -124,7 +124,7 @@ class GroupLMSUserSyncAPI {
 
                     $gids = \Drupal::entityQuery('group')
                     ->condition('field_course_ou', $group_id_api)
-                    ->accessCheck(TRUE)
+                    ->accessCheck(FALSE)
                     ->execute();
 
                     // Let's add the newly created user in the group
