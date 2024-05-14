@@ -30,12 +30,20 @@ class GroupLMSUserSyncAddCustomJson extends ConfigFormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildForm($form, $form_state);
 
-    $form['api_endpoint_version'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('API Version'),
-      '#default_value' => $config->get('api_endpoint_version'),
-      '#size' => 30,
-      '#description' => $this->t('Endpoint API Version: v1 or v2'),
+    $form['global_settings'] = [
+      '#title' => $this->t("JSON Snippet"),
+      '#type' => 'textarea',
+      '#description' => $this->t('Paste the JSON here'),
+      '#default_value' => "",
+    ];
+
+    $form['actions'] = [
+      '#type' => 'actions',
+    ];
+
+    $form['actions']['submit'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Process JSON File'),
     ];
 
     return $form;
