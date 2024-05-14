@@ -98,7 +98,7 @@ class GroupLMSUserSyncAPI {
                       \Drupal::logger('group_lms_user_sync')->notice("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
                     }
                   } else {
-                    /* There is no Drupal group with that Group API ID, continue */
+                    \Drupal::logger('group_lms_user_sync')->notice("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]);
                   }
                 } else {
                   /* User doesn't exist, create it for now */
@@ -137,7 +137,7 @@ class GroupLMSUserSyncAPI {
                         \Drupal::logger('group_lms_user_sync')->notice("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
                       }
                     } else {
-                      /* There is no Drupal group with that Group API ID, ignore it */
+                      \Drupal::logger('group_lms_user_sync')->notice("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]);
                     }
 
                   } catch (\Exception $e) {
