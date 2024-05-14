@@ -134,7 +134,7 @@ class GroupLMSUserSyncAPI {
                       /* There is no Drupal group with that Group API ID, ignore it */
                     }
 
-                  } catch (\Throwable $e) {
+                  } catch (\Exception $e) {
                     \Drupal::messenger()->addMessage('Fail to register user:' . $username_api, 'error' );
                     \Drupal::logger('group_lms_user_sync')->error("Fail to register user @username", ['@username' => $username_api ]);
                     watchdog_exception('group_lms_user_sync', $e);
