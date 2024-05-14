@@ -91,7 +91,7 @@ class GroupLMSUserSyncAPI {
 
                   if (count($gids)) {
                     foreach ($gids as $gid) {
-                      $group = Group::load(reset($gid));
+                      $group = Group::load($gid);
                       $group->addMember($user_obj);
                       $count_updated_groups[$user_id_api] = $group->id();
                       $group_name = $group->label();
@@ -130,7 +130,7 @@ class GroupLMSUserSyncAPI {
                     // Let's add the newly created user in the group
                     if (count($gids)) {
                       foreach ($gids as $gid) {
-                        $group = Group::load(reset($gid));
+                        $group = Group::load($gid);
                         $group->addMember($user_new);
                         $count_updated_groups[$user_id_api] = $group->id();
                         $group_name = $group->label();
