@@ -68,14 +68,16 @@ class GroupLMSUserSyncAPI {
             ]);
           
             if (!empty($request)) {
-              //$this->io()->success('Got data from the Endpoint !' . $request->getBody());
               $classroom = json_decode($request->getBody());
 
               foreach ($classroom as $student) {                
                 /* First, check if the user (identified by Email or Username) exists, if not, create the user */
                 $user_email_api = $student->Email;
+                /* Returns an \Drupal\user\UserInterface object */
                 $user_obj = user_load_by_mail($user_email_api);
                 $group_id_api = $student->OrgDefinedId;
+                $user_id_api = $student->Identifier;
+                $username_api = $student->Username;
                 /* Check for the RoleID field, should map to the Drupal User Role */
                 $group_role_api = $student->RoleId;
                 $count_updated_groups = [];
@@ -87,19 +89,22 @@ class GroupLMSUserSyncAPI {
                   ->execute();
 
                   if (count($gids)) {
-                    $group = Group::load(reset($gids));
-                    $group->addMember($user_obj);
+                    foreach ($gids as $gid) {
+                      $group = Group::load(reset($gid));
+                      $group->addMember($user_obj);
+                      $count_updated_groups[$user_id_api] = $group->id();
+                      $group_name = $group->label();
+                      \Drupal::logger('group_lms_user_sync')->notice("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
+                    }
                   } else {
-                    /* There is no Drupal group with that Group API ID, ignore it */
+                    /* There is no Drupal group with that Group API ID, continue */
                   }
-      
                 } else {
                   /* User doesn't exist, create it for now */
-                  $username = $student->Username;
                   $user_new = User::create();
 
                   // This username must be unique and accept only a-Z,0-9, - _ @ .
-                  $user_new->setUsername($username);
+                  $user_new->setUsername($username_api);
 
                   // Mandatory settings
                   $user_new->setPassword(NULL);
@@ -118,15 +123,20 @@ class GroupLMSUserSyncAPI {
 
                     // Let's add the newly created user in the group
                     if (count($gids)) {
-                      $group = Group::load(reset($gids));
-                      $group->addMember($user_new);
+                      foreach ($gids as $gid) {
+                        $group = Group::load(reset($gid));
+                        $group->addMember($user_new);
+                        $count_updated_groups[$user_id_api] = $group->id();
+                        $group_name = $group->label();
+                        \Drupal::logger('group_lms_user_sync')->notice("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
+                      }
                     } else {
                       /* There is no Drupal group with that Group API ID, ignore it */
                     }
 
                   } catch (\Throwable $e) {
-                    \Drupal::messenger()->addMessage('Fail to register user:' . $username, 'error' );
-                    \Drupal::logger('CREATING USER')->error("Fail to register user @username", ['@username' =>$username ]);
+                    \Drupal::messenger()->addMessage('Fail to register user:' . $username_api, 'error' );
+                    \Drupal::logger('group_lms_user_sync')->error("Fail to register user @username", ['@username' => $username_api ]);
                     watchdog_exception('group_lms_user_sync', $e);
                   }
 
