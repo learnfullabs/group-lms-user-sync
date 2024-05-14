@@ -165,11 +165,14 @@ class GroupLMSUserSyncAPI {
           }
         }
       } else {
-        // Endpoint URL was not set
+        // Endpoint URL was not set or is empty
+        \Drupal::logger('group_lms_user_sync')->warning("Failed to set Endpoint URL");
         return -1;
       }
     } else {
-
+      // Endpoint ID was not set or is empty
+      \Drupal::logger('group_lms_user_sync')->warning("Failed to set Endpoint URL");
+      return -2;
     }
 
     return 1;
