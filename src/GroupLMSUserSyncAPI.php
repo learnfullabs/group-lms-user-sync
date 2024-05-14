@@ -71,12 +71,14 @@ class GroupLMSUserSyncAPI {
               //$this->io()->success('Got data from the Endpoint !' . $request->getBody());
               $classroom = json_decode($request->getBody());
 
-              foreach($classroom as $student) {                
+              foreach ($classroom as $student) {                
                 /* First, check if the user (identified by Email or Username) exists, if not, create the user */
-                $user_obj = user_load_by_mail($student->Email);
+                $user_email_api = $student->Email;
+                $user_obj = user_load_by_mail($user_email_api);
                 $group_id_api = $student->OrgDefinedId;
+                /* Check for the RoleID field, should map to the Drupal User Role */
                 $group_role_api = $student->RoleId;
-
+                $count_updated_groups = [];
 
                 if ($user_obj) {
                   /* If it exists, enroll the user into the course identified by OrgDefinedId (OU field from the Group field) */
@@ -84,18 +86,51 @@ class GroupLMSUserSyncAPI {
                   ->condition('field_course_ou', $group_id_api)
                   ->execute();
 
-                  if (count($nids)) {
+                  if (count($gids)) {
                     $group = Group::load(reset($gids));
                     $group->addMember($user_obj);
                   } else {
-                    // 
+                    /* There is no Drupal group with that Group API ID, ignore it */
                   }
       
                 } else {
+                  /* User doesn't exist, create it for now */
+                  $username = $student->Username;
+                  $user_new = User::create();
+
+                  // This username must be unique and accept only a-Z,0-9, - _ @ .
+                  $user_new->setUsername($username);
+
+                  // Mandatory settings
+                  $user_new->setPassword(NULL);
+                  $user_new->enforceIsNew();
+                  $user_new->setEmail($user_email_api);
+
+                  // Optional settings
+                  $language = 'en';
+                  $user_new->set("langcode", $language);
+                  $user_new->set("preferred_langcode", $language);
+
+                  $user_new->activate();
+
+                  try {
+                    $res = $user_new->save();
+
+                    // Let's add the newly created user in the group
+                    if (count($gids)) {
+                      $group = Group::load(reset($gids));
+                      $group->addMember($user_new);
+                    } else {
+                      /* There is no Drupal group with that Group API ID, ignore it */
+                    }
+
+                  } catch (\Throwable $e) {
+                    \Drupal::messenger()->addMessage('Fail to register user:' . $username, 'error' );
+                    \Drupal::logger('CREATING USER')->error("Fail to register user @username", ['@username' =>$username ]);
+                    watchdog_exception('group_lms_user_sync', $e);
+                  }
 
                 }
-
-                /* Check for the RoleID field, should map to the Drupal User Role */
               }
             }
           } catch (\Exception $e) {
