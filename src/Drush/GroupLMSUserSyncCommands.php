@@ -3,6 +3,7 @@
 namespace Drupal\group_lms_user_sync\Drush;
 
 use Drupal\group_lms_user_sync\GroupLMSUserSyncAPI;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drush\Commands\DrushCommands;
 
 /**
@@ -11,6 +12,32 @@ use Drush\Commands\DrushCommands;
  * @package Drupal\group_lms_user_sync\Drush
  */
 class GroupLMSUserSyncCommands extends DrushCommands {
+
+  /**
+   * The GroupLMSUserSyncAPI wrapper.
+   *
+   * @var \Drupal\group_lms_user_sync\GroupLMSUserSyncAPI
+   */
+  protected $api;
+
+  /**
+   * The admin controller constructor.
+   *
+   * @param \Drupal\group_lms_user_sync\GroupLMSUserSyncAPI $api
+   *   The GroupLMSUserSyncAPI wrapper.
+   */
+  public function __construct(GroupLMSUserSyncAPI $api) {
+    $this->api = $api;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('group_lms_user_sync.api')
+    );
+  }
 
   /**
    * Sync users/class groups from the LMI endpoint.
@@ -22,13 +49,8 @@ class GroupLMSUserSyncCommands extends DrushCommands {
    * @usage gl-us
    */
   public function syncUsersGroups() {
-    $endpoint_id = \Drupal::config('group_lms_user_sync.settings')->get('api_endpoint_info') ?? "";
-    $api_version = "v1";
-    $endpoint_url = \Drupal::service('key.repository')->getKey($endpoint_id)->getKeyValue();
 
-    $drushHandler = new GroupLMSUSerSyncAPI($endpoint_id, $endpoint_url, $api_version);
-
-    $res = $drushHandler->syncUsersToGroups();
+    $res = $this->api->syncUsersToGroups();
 
     if ($res == 1) {
       $this->io()->success('Synced users/group from the LMI Endpoint ! ' . $endpoint_url);
