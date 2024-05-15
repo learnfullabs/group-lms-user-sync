@@ -35,15 +35,29 @@ class GroupLMSUserSyncAPI {
   protected $api_version;
 
   /**
+   * The logger service.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   */
+  protected $logger;
+
+  /**
    * Constructs a new GroupLMSUserSyncAPI object.
    *
-   * @param string $vocabulary_name
-   *   Vocabulary name where the terms will be created.
+   * @param string $endpoint_id
+   *   Endpoint ID.
+   * @param string $endpoint_url
+   *   URL of the LMS Rest Endpoint.
+   * @param string $api_version
+   *   API Version.
+   * @param \Psr\Log\LoggerInterface $logger
+   *   A logger instance.
    */
-  public function __construct(string $endpoint_id, string $endpoint_url, string $api_version) {
+  public function __construct(string $endpoint_id, string $endpoint_url, string $api_version, LoggerInterface $logger) {
     $this->endpoint_id = $endpoint_id;
     $this->endpoint_url = $endpoint_url;
     $this->api_version = $api_version;
+    $this->logger = $logger;
   }
 
   /**
@@ -94,17 +108,17 @@ class GroupLMSUserSyncAPI {
                       $group = Group::load($gid);
 
                       if (!$group) {
-                        \Drupal::logger('group_lms_user_sync')->error("Failed to load group identified by Group API ID @groupname", ['@groupname' => $group_id_api ]);
+                        $this->logger('group_lms_user_sync')->error("Failed to load group identified by Group API ID @groupname", ['@groupname' => $group_id_api ]);
                         continue;
                       }
 
                       $group->addMember($user_obj);
                       $count_updated_groups[$user_id_api] = $group->id();
                       $group_name = $group->label();
-                      \Drupal::logger('group_lms_user_sync')->notice("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
+                      $this->logger('group_lms_user_sync')->notice("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
                     }
                   } else {
-                    \Drupal::logger('group_lms_user_sync')->notice("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]);
+                    $this->logger('group_lms_user_sync')->notice("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]);
                   }
                 } else {
                   /* User doesn't exist, create it for now */
@@ -139,21 +153,21 @@ class GroupLMSUserSyncAPI {
                         $group = Group::load($gid);
 
                         if (!$group) {
-                          \Drupal::logger('group_lms_user_sync')->error("Failed to load group identified by Group API ID @groupname", ['@groupname' => $group_id_api ]);
+                          $this->logger('group_lms_user_sync')->error("Failed to load group identified by Group API ID @groupname", ['@groupname' => $group_id_api ]);
                           continue;
                         }
 
                         $group->addMember($user_new);
                         $count_updated_groups[$user_id_api] = $group->id();
                         $group_name = $group->label();
-                        \Drupal::logger('group_lms_user_sync')->notice("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
+                        $this->logger('group_lms_user_sync')->notice("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
                       }
                     } else {
-                      \Drupal::logger('group_lms_user_sync')->notice("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]);
+                      $this->logger('group_lms_user_sync')->notice("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]);
                     }
 
                   } catch (\Exception $e) {
-                    \Drupal::logger('group_lms_user_sync')->error("Failed to register user @username", ['@username' => $username_api ]);
+                    $this->logger('group_lms_user_sync')->error("Failed to register user @username", ['@username' => $username_api ]);
                     watchdog_exception('group_lms_user_sync', $e);
                   }
 
@@ -166,12 +180,12 @@ class GroupLMSUserSyncAPI {
         }
       } else {
         // Endpoint URL was not set or is empty
-        \Drupal::logger('group_lms_user_sync')->warning("Failed to set Endpoint URL");
+        $this->logger('group_lms_user_sync')->warning("Failed to set Endpoint URL");
         return -1;
       }
     } else {
       // Endpoint ID was not set or is empty
-      \Drupal::logger('group_lms_user_sync')->warning("Failed to set Endpoint URL");
+      $this->logger('group_lms_user_sync')->warning("Failed to set Endpoint URL");
       return -2;
     }
 
