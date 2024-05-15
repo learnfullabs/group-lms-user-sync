@@ -34,9 +34,10 @@ class GroupLMSUserSyncCommands extends DrushCommands {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('group_lms_user_sync.api')
-    );
+    $instance = parent::create($container);
+    $instance->api = $container->get('group_lms_user_sync.api');
+    
+    return $instance;
   }
 
   /**
