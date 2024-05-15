@@ -21,22 +21,12 @@ class GroupLMSUserSyncCommands extends DrushCommands {
   protected $api;
 
   /**
-   * The admin controller constructor.
-   *
-   * @param \Drupal\group_lms_user_sync\GroupLMSUserSyncAPI $api
-   *   The GroupLMSUserSyncAPI wrapper.
-   */
-  public function __construct(GroupLMSUserSyncAPI $api) {
-    $this->api = $api;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
     $instance = parent::create($container);
     $instance->api = $container->get('group_lms_user_sync.api');
-    
+
     return $instance;
   }
 
