@@ -1,4 +1,4 @@
 services:
   group_lms_user_sync.api:
     class: Drupal\group_lms_user_sync\GroupLMSUserSyncAPI
-    arguments: ['@logger.factory']
+    arguments: [@config.factory, '@logger.factory']

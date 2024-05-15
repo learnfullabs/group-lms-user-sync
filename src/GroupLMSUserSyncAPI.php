@@ -3,11 +3,12 @@
 namespace Drupal\group_lms_user_sync;
 
 use Drupal\user\Entity\User;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\group\Entity\Group;
 use Drupal\group\Entity\GroupInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
-use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
 
 /**
  * GroupLMSUserSyncAPI.
@@ -35,7 +36,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
    *
    * @var string
    */
-  protected $api_version;
+  protected $api_version = "v1";
 
   /**
    * The logger channel factory service.
@@ -45,12 +46,19 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
   protected $logger;
 
   /**
+   * The config factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected $configFactory;
+
+  /**
    * Constructs a new GroupLMSUserSyncAPI object.
    *
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerChannelFactory
    *   The logger channel factory service.
    */
-  public function __construct(LoggerChannelFactoryInterface $logger) {
+  public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelFactoryInterface $logger) {
     $endpoint_id = \Drupal::config('group_lms_user_sync.settings')->get('api_endpoint_info') ?? "";
     $api_version = "v1";
     $endpoint_url = \Drupal::service('key.repository')->getKey($endpoint_id)->getKeyValue();
@@ -58,6 +66,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
     $this->endpoint_id = $endpoint_id;
     $this->endpoint_url = $endpoint_url;
     $this->api_version = $api_version;
+    $this->configFactory = $config_factory;
     $this->logger = $logger->get('group_lms_user_sync');
   }
 
@@ -72,6 +81,9 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
 
   /**
    * Sync users/class groups from the LMI AP Endpoint to the Drupal Groups.
+   *
+   * @return int
+   *   1 on success or other error codes
    */
   public function syncUsersToGroups() {
     if (isset($this->endpoint_id) && !empty($this->endpoint_id)) {    
