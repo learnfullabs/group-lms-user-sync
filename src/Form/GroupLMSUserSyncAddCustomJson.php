@@ -2,6 +2,7 @@
 
 namespace Drupal\group_lms_user_sync\Form;
 
+use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Messenger\MessengerInterface;
@@ -10,7 +11,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Class GroupLMSUserSyncAddCustomJson.
  */
-class GroupLMSUserSyncAddCustomJson extends ConfigFormBase {
+class GroupLMSUserSyncAddCustomJson extends FormBase {
 
   /**
    * Provides messenger service.
@@ -55,7 +56,7 @@ class GroupLMSUserSyncAddCustomJson extends ConfigFormBase {
   public function getFormId() {
     return 'group_lms_user_sync_custom_json';
   }
-  
+
   /**
    * {@inheritdoc}
    */
