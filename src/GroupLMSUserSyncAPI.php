@@ -61,7 +61,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
   public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelFactoryInterface $logger) {
     $this->configFactory = $config_factory;
     $this->logger = $logger->get('group_lms_user_sync');
-    
+
     $config = $this->configFactory->getEditable('group_lms_user_sync.settings');
     $endpoint_id = $config->get('api_endpoint_info') ?? "";
     $api_version = "v1";
@@ -78,6 +78,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('logger'),
+      $container->get('config'),
     );
   }
 
