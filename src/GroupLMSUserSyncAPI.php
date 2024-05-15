@@ -125,10 +125,10 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
                       $group->addMember($user_obj);
                       $count_updated_groups[$user_id_api] = $group->id();
                       $group_name = $group->label();
-                      $this->logger('group_lms_user_sync')->notice("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
+                      $this->logger->notice("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
                     }
                   } else {
-                    $this->logger('group_lms_user_sync')->notice("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]);
+                    $this->logger->notice("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]);
                   }
                 } else {
                   /* User doesn't exist, create it for now */
@@ -163,21 +163,21 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
                         $group = Group::load($gid);
 
                         if (!$group) {
-                          $this->logger('group_lms_user_sync')->error("Failed to load group identified by Group API ID @groupname", ['@groupname' => $group_id_api ]);
+                          $this->logger->error("Failed to load group identified by Group API ID @groupname", ['@groupname' => $group_id_api ]);
                           continue;
                         }
 
                         $group->addMember($user_new);
                         $count_updated_groups[$user_id_api] = $group->id();
                         $group_name = $group->label();
-                        $this->logger('group_lms_user_sync')->notice("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
+                        $this->logger->notice("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
                       }
                     } else {
-                      $this->logger('group_lms_user_sync')->notice("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]);
+                      $this->logger->notice("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]);
                     }
 
                   } catch (\Exception $e) {
-                    $this->logger('group_lms_user_sync')->error("Failed to register user @username", ['@username' => $username_api ]);
+                    $this->logger->error("Failed to register user @username", ['@username' => $username_api ]);
                     watchdog_exception('group_lms_user_sync', $e);
                   }
 
@@ -190,12 +190,12 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
         }
       } else {
         // Endpoint URL was not set or is empty
-        $this->logger('group_lms_user_sync')->warning("Failed to set Endpoint URL");
+        $this->logger->warning("Failed to set Endpoint URL");
         return -1;
       }
     } else {
       // Endpoint ID was not set or is empty
-      $this->logger('group_lms_user_sync')->warning("Failed to set Endpoint URL");
+      $this->logger->warning("Failed to set Endpoint URL");
       return -2;
     }
 
