@@ -61,8 +61,6 @@ class GroupLMSUserSyncAddCustomJson extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $form = parent::buildForm($form, $form_state);
-
     $form['global_settings'] = [
       '#title' => $this->t("JSON Snippet"),
       '#type' => 'textarea',
@@ -87,8 +85,6 @@ class GroupLMSUserSyncAddCustomJson extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $this->messenger->addMessage($this->t('JSON Updated.'));
-
-    parent::submitForm($form, $form_state);
   }
 
 }
