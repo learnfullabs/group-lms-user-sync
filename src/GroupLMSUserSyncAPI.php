@@ -50,7 +50,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerChannelFactory
    *   The logger channel factory service.
    */
-  public function __construct(LoggerInterface $logger) {
+  public function __construct(LoggerChannelFactoryInterface $logger) {
     $endpoint_id = \Drupal::config('group_lms_user_sync.settings')->get('api_endpoint_info') ?? "";
     $api_version = "v1";
     $endpoint_url = \Drupal::service('key.repository')->getKey($endpoint_id)->getKeyValue();
