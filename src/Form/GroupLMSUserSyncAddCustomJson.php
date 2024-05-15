@@ -84,6 +84,7 @@ class GroupLMSUserSyncAddCustomJson extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    \Drupal::logger('group_lms_user_sync')->notice("Added user TEST ?");
     $this->messenger->addMessage($this->t('JSON Updated.'));
   }
 
