@@ -5,14 +5,16 @@ namespace Drupal\group_lms_user_sync;
 use Drupal\user\Entity\User;
 use Drupal\group\Entity\Group;
 use Drupal\group\Entity\GroupInterface;
-use Psr\Log\LoggerInterface;
+use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * GroupLMSUserSyncAPI.
  *
  * Class that provides methods to parse/process the data (JSON) coming from the API
  */
-class GroupLMSUserSyncAPI {
+class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
 
   /**
    * Endpoint ID.
@@ -36,7 +38,7 @@ class GroupLMSUserSyncAPI {
   protected $api_version;
 
   /**
-   * The logger service.
+   * The logger channel factory service.
    *
    * @var \Drupal\Core\Logger\LoggerChannelInterface
    */
@@ -51,14 +53,23 @@ class GroupLMSUserSyncAPI {
    *   URL of the LMS Rest Endpoint.
    * @param string $api_version
    *   API Version.
-   * @param \Psr\Log\LoggerInterface $logger
-   *   A logger instance.
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerChannelFactory
+   *   The logger channel factory service.
    */
   public function __construct(string $endpoint_id, string $endpoint_url, string $api_version, LoggerInterface $logger) {
     $this->endpoint_id = $endpoint_id;
     $this->endpoint_url = $endpoint_url;
     $this->api_version = $api_version;
-    $this->logger = $logger;
+    $this->logger = $loggerChannelFactory->get('group_lms_user_sync');
+  }
+
+    /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('logger'),
+    );
   }
 
   /**

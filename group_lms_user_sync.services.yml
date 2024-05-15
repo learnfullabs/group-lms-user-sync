@@ -1,0 +1,4 @@
+services:
+  openai.api:
+    class: Drupal\group_lms_user_sync\GroupLMSUserSyncAPI
+    arguments: ['@logger.factory']
