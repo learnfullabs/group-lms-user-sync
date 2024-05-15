@@ -58,7 +58,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
     $this->endpoint_id = $endpoint_id;
     $this->endpoint_url = $endpoint_url;
     $this->api_version = $api_version;
-    $this->logger = $loggerChannelFactory->get('group_lms_user_sync');
+    $this->logger = $logger->get('group_lms_user_sync');
   }
 
     /**
