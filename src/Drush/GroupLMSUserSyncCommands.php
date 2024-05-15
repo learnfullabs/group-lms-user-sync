@@ -3,7 +3,6 @@
 namespace Drupal\group_lms_user_sync\Drush;
 
 use Drupal\group_lms_user_sync\GroupLMSUserSyncAPI;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drush\Commands\DrushCommands;
 
 /**
@@ -21,13 +20,13 @@ class GroupLMSUserSyncCommands extends DrushCommands {
   protected $api;
 
   /**
-   * {@inheritdoc}
+   * The admin controller constructor.
+   *
+   * @param \Drupal\group_lms_user_sync\GroupLMSUserSyncAPI $api
+   *   The GroupLMSUserSyncAPI wrapper.
    */
-  public static function create(ContainerInterface $container) {
-    $instance = parent::create($container);
-    $instance->api = $container->get('group_lms_user_sync.api');
-
-    return $instance;
+  public function __construct(GroupLMSUserSyncAPI $api) {
+    $this->api = $api;
   }
 
   /**
