@@ -77,8 +77,8 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('logger'),
       $container->get('config'),
+      $container->get('logger'),
     );
   }
 
