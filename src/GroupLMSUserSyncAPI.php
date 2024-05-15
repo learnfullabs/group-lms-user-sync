@@ -5,6 +5,7 @@ namespace Drupal\group_lms_user_sync;
 use Drupal\user\Entity\User;
 use Drupal\group\Entity\Group;
 use Drupal\group\Entity\GroupInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * GroupLMSUserSyncAPI.
