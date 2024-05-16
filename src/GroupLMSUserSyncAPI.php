@@ -3,6 +3,7 @@
 namespace Drupal\group_lms_user_sync;
 
 use Drupal\user\Entity\User;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\group\Entity\Group;
 use Drupal\group\Entity\GroupInterface;
@@ -53,14 +54,26 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
   protected $configFactory;
 
   /**
+   * The messenger.
+   *
+   * @var \Drupal\Core\Messenger\MessengerInterface
+   */
+  protected $messenger;
+
+  /**
    * Constructs a new GroupLMSUserSyncAPI object.
    *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The configuration object factory.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerChannelFactory
    *   The logger channel factory service.
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   The messenger.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelFactoryInterface $logger) {
+  public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelFactoryInterface $logger, MessengerInterface $messenger) {
     $this->configFactory = $config_factory;
     $this->logger = $logger->get('group_lms_user_sync');
+    $this->messenger = $messenger;
 
     $config = $this->configFactory->getEditable('group_lms_user_sync.settings');
     $endpoint_id = $config->get('api_endpoint_info') ?? "";
@@ -83,10 +96,10 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
   }
 
   /**
-   * Sync users/class groups from the LMI AP Endpoint to the Drupal Groups.
+   * Sync users/class groups from the LMI AP Endpoint to Drupal Groups.
    *
    * @return int
-   *   1 on success or other error codes
+   *   TRUE on success or FALSE on error
    */
   public function syncUsersToGroups() {
     if (isset($this->endpoint_id) && !empty($this->endpoint_id)) {    
@@ -206,15 +219,119 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
       } else {
         // Endpoint URL was not set or is empty
         $this->logger->warning("Failed to set Endpoint URL");
-        return -1;
+        return FALSE;
       }
     } else {
       // Endpoint ID was not set or is empty
       $this->logger->warning("Failed to set Endpoint URL");
-      return -2;
+      return FALSE;
     }
 
-    return 1;
+    return TRUE;
+  }
+
+  /**
+   * Sync users/class groups from JSON Field to Drupal Groups.
+   * 
+  * @param string $jsonContent
+   *   The JSON Snippet that will be processed.
+   *
+   * @return int
+   *   TRUE on success or FALSE on error
+   */
+  public function syncFromTextField($jsonContent) {
+    $classroom = json_decode($jsonContent);
+
+    foreach ($classroom as $student) {              
+      /* First, check if the user (identified by Email or Username) exists, if not, create the user */
+      $user_email_api = $student->Email;
+      /* Returns an \Drupal\user\UserInterface object */
+      $user_obj = user_load_by_mail($user_email_api);
+      $group_id_api = $student->OrgDefinedId;
+      $user_id_api = $student->Identifier;
+      $username_api = $student->Username;
+
+      /* Check for the RoleID field, should map to the Drupal User Role */
+      $group_role_api = $student->RoleId;
+      $count_updated_groups = [];
+
+      if ($user_obj) {
+        /* If it exists, enroll the user into the course identified by OrgDefinedId (OU field from the Group field) */
+        $gids = \Drupal::entityQuery('group')
+        ->condition('field_course_ou', $group_id_api)
+        ->accessCheck(FALSE)
+        ->execute();
+
+        if (count($gids)) {
+          foreach ($gids as $gid) {
+            $group = Group::load($gid);
+
+            if (!$group) {
+              $this->logger('group_lms_user_sync')->error("Failed to load group identified by Group API ID @groupname", ['@groupname' => $group_id_api ]);
+              continue;
+            }
+
+            $group->addMember($user_obj);
+            $count_updated_groups[$user_id_api] = $group->id();
+            $group_name = $group->label();
+            $this->logger->notice("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
+          }
+        } else {
+          $this->logger->notice("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]);
+        }
+      } else {
+        /* User doesn't exist, create it for now */
+        $user_new = User::create();
+
+        // This username must be unique and accept only a-Z,0-9, - _ @ .
+        $user_new->setUsername($username_api);
+
+        // Mandatory settings
+        $user_new->setPassword(NULL);
+        $user_new->enforceIsNew();
+        $user_new->setEmail($user_email_api);
+
+        // Optional settings
+        $language = 'en';
+        $user_new->set("langcode", $language);
+        $user_new->set("preferred_langcode", $language);
+
+        $user_new->activate();
+
+        try {
+          $res = $user_new->save();
+
+          $gids = \Drupal::entityQuery('group')
+          ->condition('field_course_ou', $group_id_api)
+          ->accessCheck(FALSE)
+          ->execute();
+
+          // Let's add the newly created user in the group
+          if (count($gids)) {
+            foreach ($gids as $gid) {
+              $group = Group::load($gid);
+
+              if (!$group) {
+                $this->logger->error("Failed to load group identified by Group API ID @groupname", ['@groupname' => $group_id_api ]);
+                continue;
+              }
+
+              $group->addMember($user_new);
+              $count_updated_groups[$user_id_api] = $group->id();
+              $group_name = $group->label();
+              $this->logger->notice("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
+            }
+          } else {
+            $this->logger->notice("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]);
+          }
+
+        } catch (\Exception $e) {
+          $this->logger->error("Failed to register user @username", ['@username' => $username_api ]);
+          watchdog_exception('group_lms_user_sync', $e);
+        }
+
+      }
+    }
   }
 
 }
