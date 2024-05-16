@@ -6,6 +6,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\group_lms_user_sync\GroupLMSUserSyncAPI;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
