@@ -37,6 +37,8 @@ class GroupLMSUserSyncAddCustomJson extends FormBase {
   /**
    * GroupLMSUserSyncAddCustomJson constructor.
    *
+   * @param \Drupal\group_lms_user_sync\GroupLMSUserSyncAPI $api
+   *   The GroupLMSUserSyncAPI wrapper.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager service.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
