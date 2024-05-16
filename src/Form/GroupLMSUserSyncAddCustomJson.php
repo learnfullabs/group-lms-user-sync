@@ -111,7 +111,7 @@ class GroupLMSUserSyncAddCustomJson extends FormBase {
         $this->messenger->AddError("Error when updating the groups from the JSON Data. Check database logs for more info.");
       }
     } catch (\Exception $e) {
-      $this->messenger->AddError("Error when updating the groups from the JSON Data. Check database logs for more info.");
+      $this->messenger->AddError("Error when trying to run the syncFromTextField() method.");
     }
   }
 
