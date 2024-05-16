@@ -92,6 +92,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
     return new static(
       $container->get('config'),
       $container->get('logger'),
+      $container->get('messenger'),
     );
   }
 
@@ -243,7 +244,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
     $classroom = json_decode($jsonContent);
 
     if (!$classroom) {
-      $this->messenger->AddError("Error when trying to decode the JSON data, please check.");
+      $this->messenger->addError("Error when trying to decode the JSON data, please check.");
       return FALSE;
     }
 
@@ -279,7 +280,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
             $group->addMember($user_obj);
             $count_updated_groups[$user_id_api] = $group->id();
             $group_name = $group->label();
-            $this->messenger->addMessage("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
+            $this->messenger->addStatus("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
             $this->logger->notice("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
           }
         } else {
@@ -319,7 +320,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
               $group = Group::load($gid);
 
               if (!$group) {
-                $this->messenger->AddError("Failed to load group identified by Group API ID @groupname", ['@groupname' => $group_id_api ]);
+                $this->messenger->addError("Failed to load group identified by Group API ID @groupname", ['@groupname' => $group_id_api ]);
                 $this->logger->error("Failed to load group identified by Group API ID @groupname", ['@groupname' => $group_id_api ]);
                 continue;
               }
@@ -328,16 +329,16 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
               $count_updated_groups[$user_id_api] = $group->id();
               $group_name = $group->label();
 
-              $this->messenger->AddMessage("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
+              $this->messenger->addStatus("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
               $this->logger->notice("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
             }
           } else {
-            $this->messenger->AddWarning("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]);
+            $this->messenger->addWarning("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]);
             $this->logger->notice("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]);
           }
 
         } catch (\Exception $e) {
-          $this->messenger->AddError("Failed to register user @username", ['@username' => $username_api ]);
+          $this->messenger->addError("Failed to register user @username", ['@username' => $username_api ]);
           $this->logger->error("Failed to register user @username", ['@username' => $username_api ]);
           watchdog_exception('group_lms_user_sync', $e);
         }
