@@ -55,6 +55,7 @@ class GroupLMSUserSyncAddCustomJson extends FormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
+      $container->get('group_lms_user_sync.api'),
       $container->get('entity_type.manager'),
       $container->get('messenger')
     );
