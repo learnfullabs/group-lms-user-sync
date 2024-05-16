@@ -61,7 +61,7 @@ class GroupLMSUserSyncAddCustomJson extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $form['global_settings'] = [
+    $form['json_data'] = [
       '#title' => $this->t("JSON Snippet"),
       '#type' => 'textarea',
       '#description' => $this->t('Paste the JSON Content here for updating/adding new users to the groups. Refer to the README.md for more information on the structure of the JSON Snippet.'),
@@ -84,7 +84,19 @@ class GroupLMSUserSyncAddCustomJson extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $this->messenger->addMessage($this->t('JSON Updated.'));
+    $json_data = $form_state->getValue('json_data');
+
+    try {
+      $res = $this->api->syncFromTextField();
+
+      if ($res) {
+        $this->messenger->addMessage($this->t('Processed the JSON Data and updated groups.'));
+      } else {
+        $this->messenger->AddError("Error when updating the groups from the JSON Data. Check database logs for more info.");
+      }
+    } catch (\Exception $e) {
+      $this->messenger->AddError("Error when updating the groups from the JSON Data. Check database logs for more info.");
+    }
   }
 
 }
