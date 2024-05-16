@@ -279,7 +279,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
             $group->addMember($user_obj);
             $count_updated_groups[$user_id_api] = $group->id();
             $group_name = $group->label();
-            $this->messenger->addMessenger("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
+            $this->messenger->addMessage("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
             $this->logger->notice("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
           }
         } else {
