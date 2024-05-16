@@ -86,8 +86,12 @@ class GroupLMSUserSyncAddCustomJson extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $json_data = $form_state->getValue('json_data');
 
+    if (!$json_data) {
+      $this->messenger->AddError("JSON Data field is empty.");
+    }
+
     try {
-      $res = $this->api->syncFromTextField();
+      $res = $this->api->syncFromTextField($json_data);
 
       if ($res) {
         $this->messenger->addMessage($this->t('Processed the JSON Data and updated groups.'));
