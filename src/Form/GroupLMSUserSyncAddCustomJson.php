@@ -14,6 +14,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class GroupLMSUserSyncAddCustomJson extends FormBase {
 
   /**
+   * The GroupLMSUserSyncAPI wrapper.
+   *
+   * @var \Drupal\group_lms_user_sync\GroupLMSUserSyncAPI
+   */
+  protected $api;
+
+  /**
    * Provides messenger service.
    *
    * @var \Drupal\Core\Messenger\Messenger
@@ -35,7 +42,8 @@ class GroupLMSUserSyncAddCustomJson extends FormBase {
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, MessengerInterface $messenger) {
+  public function __construct(GroupLMSUserSyncAPI $api, EntityTypeManagerInterface $entity_type_manager, MessengerInterface $messenger) {
+    $this->api = $api;
     $this->entityTypeManager = $entity_type_manager;
     $this->messenger = $messenger;
   }
