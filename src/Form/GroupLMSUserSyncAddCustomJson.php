@@ -102,16 +102,12 @@ class GroupLMSUserSyncAddCustomJson extends FormBase {
       $this->messenger->AddError("JSON Data field is empty.");
     }
 
-    try {
-      $res = $this->api->syncFromTextField($json_data);
+    $res = $this->api->syncFromTextField($json_data);
 
-      if ($res) {
-        $this->messenger->addMessage($this->t('Processed the JSON Data and updated groups.'));
-      } else {
-        $this->messenger->AddError("Error when updating the groups from the JSON Data. Check database logs for more info.");
-      }
-    } catch (\Exception $e) {
-      $this->messenger->AddError("Error when trying to run the syncFromTextField() method.");
+    if ($res) {
+      $this->messenger->addMessage($this->t('Processed the JSON Data and updated groups.'));
+    } else {
+      $this->messenger->AddError("Error when updating the groups from the JSON Data. Check database logs for more info.");
     }
   }
 
