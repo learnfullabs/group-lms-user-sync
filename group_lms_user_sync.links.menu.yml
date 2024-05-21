@@ -3,11 +3,12 @@ group_lms_user_sync.admin.structure.settings:
   title: Group LMS User Sync Settings
   description: 'Configure the group lms user sync settings.'
   route_name: group_lms_user_sync.settings
-  parent: system.admin_config_system
-  weight: 100
+  parent: system.admin_group
+  weight: 15
 
 group_lms_user_sync.custom_json_form:
   route_name: group_lms_user_sync.custom_json_form
   title: Group LMS User - Import JSON
   description: 'Group LMS User - Import JSON'
-  parent: system.admin_structure
+  parent: system.admin_group
+  weight: 20
