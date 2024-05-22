@@ -42,7 +42,7 @@ class GroupLMSUserSyncCommands extends DrushCommands {
     $res = $this->api->syncUsersToGroups();
 
     if ($res) {
-      $this->io()->success('Synced users/group from the LMI Endpoint ! ' . $endpoint_url);
+      $this->io()->success('Synced users/group from the LMI Endpoint ! ' . $this->api->getAPIEndpoint());
     } else {
       $this->io()->error('Unknown Error - Please check the Database Log table for more information !');
     }

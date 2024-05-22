@@ -102,14 +102,16 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
    * @return int
    *   TRUE on success or FALSE on error
    */
-  public function syncUsersToGroups() {
+  public function syncUsersToGroups(): int {
     if (isset($this->endpoint_id) && !empty($this->endpoint_id)) {    
       if (isset($this->endpoint_url) && !empty($this->endpoint_url)) {
         // Create an httpClient Object that will be used for all the requests.
         $client = \Drupal::httpClient();
 
         // Pulling the data from the API
-        $group_ids = [1, 2, 3];
+        $group_ids = $this->getDrupalGroupIds();
+
+        file_put_contents("/tmp/girs", json_encode($group_ids));
 
         foreach ($group_ids as $group_id) {
           try {
@@ -160,26 +162,8 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
                     $this->logger->notice("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]);
                   }
                 } else {
-                  /* User doesn't exist, create it for now */
-                  $user_new = User::create();
-
-                  // This username must be unique and accept only a-Z,0-9, - _ @ .
-                  $user_new->setUsername($username_api);
-
-                  // Mandatory settings
-                  $user_new->setPassword(NULL);
-                  $user_new->enforceIsNew();
-                  $user_new->setEmail($user_email_api);
-
-                  // Optional settings
-                  $language = 'en';
-                  $user_new->set("langcode", $language);
-                  $user_new->set("preferred_langcode", $language);
-
-                  $user_new->activate();
-
                   try {
-                    $res = $user_new->save();
+                    $user_new = $this->createNewUser($username_api, $user_email_api, $language, "");
 
                     $gids = \Drupal::entityQuery('group')
                     ->condition('field_course_ou', $group_id_api)
@@ -206,7 +190,6 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
                     }
 
                   } catch (\Exception $e) {
-                    $this->logger->error("Failed to register user @username", ['@username' => $username_api ]);
                     watchdog_exception('group_lms_user_sync', $e);
                   }
 
@@ -234,13 +217,13 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
   /**
    * Sync users/class groups from JSON Field to Drupal Groups.
    * 
-  * @param string $jsonContent
+   * @param string $jsonContent
    *   The JSON Snippet that will be processed.
    *
    * @return int
    *   TRUE on success or FALSE on error
    */
-  public function syncFromTextField($jsonContent) {
+  public function syncFromTextField($jsonContent): int {
     $classroom = json_decode($jsonContent);
 
     if (!$classroom) {
@@ -288,26 +271,8 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
           $this->logger->notice("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]);
         }
       } else {
-        /* User doesn't exist, create it for now */
-        $user_new = User::create();
-
-        // This username must be unique and accept only a-Z,0-9, - _ @ .
-        $user_new->setUsername($username_api);
-
-        // Mandatory settings
-        $user_new->setPassword(NULL);
-        $user_new->enforceIsNew();
-        $user_new->setEmail($user_email_api);
-
-        // Optional settings
-        $language = 'en';
-        $user_new->set("langcode", $language);
-        $user_new->set("preferred_langcode", $language);
-
-        $user_new->activate();
-
         try {
-          $res = $user_new->save();
+          $user_new = $this->createNewUser($username_api, $user_email_api, $language, "");
 
           $gids = \Drupal::entityQuery('group')
           ->condition('field_course_ou', $group_id_api)
@@ -338,8 +303,6 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
           }
 
         } catch (\Exception $e) {
-          $this->messenger->addError(t("Failed to register user @username", ['@username' => $username_api ]));
-          $this->logger->error("Failed to register user @username", ['@username' => $username_api ]);
           watchdog_exception('group_lms_user_sync', $e);
         }
 
@@ -347,6 +310,94 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
     }
     
     return TRUE;
+  }
+
+  /**
+   * Return a list of all the Group IDs from the Group field field_course_ou.
+   * 
+   * @return array
+   *   Array of Group IDs or an empty array if empty
+   */
+  private function getDrupalGroupIds(): array {
+    $gids = \Drupal::entityQuery('group')
+    ->exists('field_course_ou')
+    ->accessCheck(FALSE)
+    ->execute();
+
+    if (count($gids) > 0) {
+      return $gids;
+    } else {
+      return [];
+    }
+  }
+
+  /**
+   * Helper function that returns the API Endpoint URL, for debugging purposes
+   * 
+   * @return string
+   *   API Endpoint URL
+   */
+  public function getAPIEndpoint() {
+    return ($this->endpoint_url . '/' . $this->api_version);
+  }
+
+  /**
+   * Add an user to a set of Drupal Groups.
+   *
+   * @param Drupal\user\Entity\User $user
+   *   User object entity.
+   * @param array $groups
+   *   Array of Drupal Group IDs (NOT Group OU IDs) where the user will be added
+   * 
+   * @return int
+   *   TRUE on success or FALSE on error
+   */
+  private function addUserToGroups(User $user, $groups) {
+  }
+
+  /**
+   * Create a new user with the paramaters given from the API.
+   *
+   * @param string $username_api
+   *   Username from the API.
+   * @param string $user_email_api
+   *   User email from the API.
+   * @param string $language
+   *   Language of choice for the user.
+   * @param string $user_role
+   *   Role for the user.
+   * 
+   * @return int
+   *   Drupal\user\Entity\User on success or FALSE on error
+   */
+  private function createNewUser($username_api, $user_email_api, $language, $user_role = "") {
+    /* User doesn't exist, create it for now */
+    $user_new = User::create();
+
+    // This username must be unique and accept only a-Z,0-9, - _ @ .
+    $user_new->setUsername($username_api);
+
+    // Mandatory settings
+    $user_new->setPassword(NULL);
+    $user_new->enforceIsNew();
+    $user_new->setEmail($user_email_api);
+
+    // Optional settings
+    $language = 'en';
+    $user_new->set("langcode", $language);
+    $user_new->set("preferred_langcode", $language);
+
+    $user_new->activate();
+
+    $res = $user_new->save();
+
+    if (!$res) {
+      $this->messenger->addError(t("Failed to register user @username", ['@username' => $username_api ]));
+      $this->logger->error("Failed to register user @username", ['@username' => $username_api ]);
+      return FALSE;
+    } else {
+      return $true;
+    }
   }
 
 }
