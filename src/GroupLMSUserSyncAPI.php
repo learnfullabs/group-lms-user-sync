@@ -108,10 +108,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
         // Create an httpClient Object that will be used for all the requests.
         $client = \Drupal::httpClient();
 
-        // Pulling the data from the API
-        $group_ids = $this->getDrupalGroupIds();
-
-        file_put_contents("/tmp/girs", json_encode($group_ids));
+        $group_ids = $this->getAPIGroupIds();
 
         foreach ($group_ids as $group_id) {
           try {
@@ -136,6 +133,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
                 /* Check for the RoleID field, should map to the Drupal User Role */
                 $group_role_api = $student->RoleId;
                 $count_updated_groups = [];
+                $language = "en";
 
                 if ($user_obj) {
                   /* If it exists, enroll the user into the course identified by OrgDefinedId (OU field from the Group field) */
@@ -313,19 +311,25 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
   }
 
   /**
-   * Return a list of all the Group IDs from the Group field field_course_ou.
+   * Return a list of all the Group API IDs from the Group field field_course_ou.
    * 
    * @return array
-   *   Array of Group IDs or an empty array if empty
+   *   Array of Group API IDs or an empty array if empty
    */
-  private function getDrupalGroupIds(): array {
+  private function getAPIGroupIds(): array {
+    $group_api_ids = [];
     $gids = \Drupal::entityQuery('group')
     ->exists('field_course_ou')
     ->accessCheck(FALSE)
     ->execute();
 
     if (count($gids) > 0) {
-      return $gids;
+      foreach ($gids as $gid) {
+        $group = Group::load($gid);
+        $group_api_ids[] = $group->field_course_ou->value;
+      }
+
+      return $group_api_ids;
     } else {
       return [];
     }
@@ -396,7 +400,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
       $this->logger->error("Failed to register user @username", ['@username' => $username_api ]);
       return FALSE;
     } else {
-      return $true;
+      return $user_new;
     }
   }
 
