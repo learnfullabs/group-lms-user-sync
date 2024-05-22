@@ -166,7 +166,10 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
                       //$expected = "/group/{$group->id()}/content/{$group_relationship->id()}";
                       //$this->assertEquals($expected, $group_relationship->toUrl()->toString());
                       $group_relationship = $group->getMember($user_obj)->getGroupRelationship();
+                      $group_member = $group->getMember($user_obj);
                       $group_relationship->field_course_ou->value = $group_id_api;
+                      $group_relationship->save();
+                      $group->save();
 
                       $count_updated_groups[$user_id_api] = $group->id();
                       $group_name = $group->label();
@@ -199,7 +202,10 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
                         /* Call method $group->getMember(), it will return a Group Membership entity object */
                         /* We will use this object to set the custom field field_course_ou and save the Group Membership Entity */
                         $group_relationship = $group->getMember($user_obj)->getGroupRelationship();
+                        $group_member = $group->getMember($user_obj);
                         $group_relationship->field_course_ou->value = $group_id_api;
+                        $group_relationship->save();
+                        $group->save();
 
                         $count_updated_groups[$user_id_api] = $group->id();
                         $group_name = $group->label();
@@ -285,7 +291,10 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
             /* Call method $group->getMember(), it will return a Group Membership entity object */
             /* We will use this object to set the custom field field_course_ou and save the Group Membership Entity */
             $group_relationship = $group->getMember($user_obj)->getGroupRelationship();
+            $group_member = $group->getMember($user_obj);
             $group_relationship->field_course_ou->value = $group_id_api;
+            $group_relationship->save();
+            $group->save();
 
             $count_updated_groups[$user_id_api] = $group->id();
             $group_name = $group->label();
@@ -322,8 +331,11 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
               /* Call method $group->getMember(), it will return a Group Membership entity object */
               /* We will use this object to set the custom field field_course_ou and save the Group Membership Entity */
               $group_relationship = $group->getMember($user_obj)->getGroupRelationship();
+              $group_member = $group->getMember($user_obj);
               $group_relationship->field_course_ou->value = $group_id_api;
-              
+              $group_relationship->save();
+              $group->save();
+
               $count_updated_groups[$user_id_api] = $group->id();
               $group_name = $group->label();
 
