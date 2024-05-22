@@ -108,6 +108,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
         // Create an httpClient Object that will be used for all the requests.
         $client = \Drupal::httpClient();
 
+        /* Get a list of all the Group API IDs stored in the Drupal groups */
         $group_ids = $this->getAPIGroupIds();
 
         foreach ($group_ids as $group_id) {
@@ -142,7 +143,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
                   ->accessCheck(FALSE)
                   ->execute();
 
-                  if (count($gids)) {
+                  if (count($gids) > 0) {
                     foreach ($gids as $gid) {
                       $group = Group::load($gid);
 
@@ -169,7 +170,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
                     ->execute();
 
                     // Let's add the newly created user in the group
-                    if (count($gids)) {
+                    if (count($gids) > 0) {
                       foreach ($gids as $gid) {
                         $group = Group::load($gid);
 
@@ -249,7 +250,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
         ->accessCheck(FALSE)
         ->execute();
 
-        if (count($gids)) {
+        if (count($gids) > 0) {
           foreach ($gids as $gid) {
             $group = Group::load($gid);
 
@@ -278,7 +279,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
           ->execute();
 
           // Let's add the newly created user in the group
-          if (count($gids)) {
+          if (count($gids) > 0) {
             foreach ($gids as $gid) {
               $group = Group::load($gid);
 
@@ -328,11 +329,9 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
         $group = Group::load($gid);
         $group_api_ids[] = $group->field_course_ou->value;
       }
-
-      return $group_api_ids;
-    } else {
-      return [];
     }
+
+    return $group_api_ids;
   }
 
   /**
