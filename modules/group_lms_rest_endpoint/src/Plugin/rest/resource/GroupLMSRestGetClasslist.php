@@ -67,17 +67,15 @@ class GroupLMSRestGetClasslist extends ResourceBase {
    * Responds to entity GET requests.
    * @return \Drupal\rest\ResourceResponse
    */
-  public function get($version = "v1", $orgUnitId = 1) {
+  public function get($version = "v1", $orgUnitId = 100101) {
     $path = DRUPAL_ROOT . "/" . \Drupal::service('extension.list.module')->getPath('group_lms_rest_endpoint');
 
-    if ($orgUnitId == 1) {
-      $jsonContents = json_decode(file_get_contents($path . "/assets/groups/1.json"), true);
-    } else if ($orgUnitId == 2) {
-      $jsonContents = json_decode(file_get_contents($path . "/assets/groups/2.json"), true);
-    } else if ($orgUnitId == 3) {
-      $jsonContents = json_decode(file_get_contents($path . "/assets/groups/3.json"), true);
-    } else {
-      $jsonContents = "Group ID does not exist";
+    if (isset($orgUnitId) && is_int($orgUnitId)) {
+      if (file_exists($path . "/assets/groups/" . $orgUnitId . ".json")) {
+        $jsonContents = json_decode(file_get_contents($path . "/assets/groups/" . $orgUnitId . ".json"), true);
+      } else {
+        $jsonContents = "Group ID does not exist";
+      }
     }
 
     $response = $jsonContents;
