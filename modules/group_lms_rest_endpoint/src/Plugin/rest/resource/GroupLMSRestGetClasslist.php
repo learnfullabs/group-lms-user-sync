@@ -70,7 +70,7 @@ class GroupLMSRestGetClasslist extends ResourceBase {
   public function get($version = "v1", $orgUnitId = 100101) {
     $path = DRUPAL_ROOT . "/" . \Drupal::service('extension.list.module')->getPath('group_lms_rest_endpoint');
 
-    if (isset($orgUnitId) && is_int($orgUnitId)) {
+    if (isset($orgUnitId) && !empty($orgUnitId)) {
       if (file_exists($path . "/assets/groups/" . $orgUnitId . ".json")) {
         $jsonContents = json_decode(file_get_contents($path . "/assets/groups/" . $orgUnitId . ".json"), true);
       } else {
