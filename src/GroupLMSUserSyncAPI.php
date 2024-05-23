@@ -155,7 +155,6 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
                       $group_relationship = $group->getMember($user_obj)->getGroupRelationship();
                       $group_relationship->field_course_ou->value = $group_id_api;
                       $group_relationship->save();
-                      $group->save();
 
                       $count_updated_groups[$user_id_api] = $group->id();
                       $group_name = $group->label();
@@ -187,7 +186,6 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
                         $group_relationship = $group->getMember($user_obj)->getGroupRelationship();
                         $group_relationship->field_course_ou->value = $group_id_api;
                         $group_relationship->save();
-                        $group->save();
 
                         $count_updated_groups[$user_id_api] = $group->id();
                         $group_name = $group->label();
@@ -272,7 +270,6 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
             $group_relationship = $group->getMember($user_obj)->getGroupRelationship();
             $group_relationship->field_course_ou->value = $group_id_api;
             $group_relationship->save();
-            $group->save();
 
             $count_updated_groups[$user_id_api] = $group->id();
             $group_name = $group->label();
@@ -308,7 +305,6 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
               $group_relationship = $group->getMember($user_obj)->getGroupRelationship();
               $group_relationship->field_course_ou->value = $group_id_api;
               $group_relationship->save();
-              $group->save();
 
               $count_updated_groups[$user_id_api] = $group->id();
               $group_name = $group->label();
