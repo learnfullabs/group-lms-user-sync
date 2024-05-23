@@ -348,7 +348,10 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
     if (count($gids) > 0) {
       foreach ($gids as $gid) {
         $group = Group::load($gid);
-        $group_api_ids[] = $group->field_course_ou->value;
+        $api_ou = $group->field_course_ou->getValue();
+        foreach ($api_ou as $ou) {
+          $group_api_ids[] = $ou["value"];
+        }
       }
     }
 
