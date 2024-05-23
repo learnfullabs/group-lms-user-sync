@@ -8,6 +8,5 @@ configuration:
     - hal_json
     - xml
   authentication:
-    - cookie
     - basic_auth
     - rest_auth
