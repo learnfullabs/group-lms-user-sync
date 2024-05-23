@@ -153,6 +153,10 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
                       }
 
                       $group->addMember($user_obj);
+                      $group_relationship = $group->getMember($user_obj)->getGroupRelationship();
+                      $group_relationship->field_course_ou->value = $group_id_api;
+                      $group_relationship->save();
+
                       $count_updated_groups[$user_id_api] = $group->id();
                       $group_name = $group->label();
                       $this->logger->notice("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
@@ -180,6 +184,10 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
                         }
 
                         $group->addMember($user_new);
+                        $group_relationship = $group->getMember($user_obj)->getGroupRelationship();
+                        $group_relationship->field_course_ou->value = $group_id_api;
+                        $group_relationship->save();
+
                         $count_updated_groups[$user_id_api] = $group->id();
                         $group_name = $group->label();
                         $this->logger->notice("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
@@ -260,8 +268,13 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
             }
 
             $group->addMember($user_obj);
+            $group_relationship = $group->getMember($user_obj)->getGroupRelationship();
+            $group_relationship->field_course_ou->value = $group_id_api;
+            $group_relationship->save();
+
             $count_updated_groups[$user_id_api] = $group->id();
             $group_name = $group->label();
+
             $this->messenger->addStatus(t("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]));
             $this->logger->notice("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
           }
@@ -290,6 +303,10 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
               }
 
               $group->addMember($user_new);
+              $group_relationship = $group->getMember($user_obj)->getGroupRelationship();
+              $group_relationship->field_course_ou->value = $group_id_api;
+              $group_relationship->save();
+
               $count_updated_groups[$user_id_api] = $group->id();
               $group_name = $group->label();
 
