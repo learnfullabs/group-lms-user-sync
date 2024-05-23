@@ -124,7 +124,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
               if ($request->getBody()) {
                 $classroom = json_decode($request->getBody());
 
-                if (is_object($classroom)) {
+                if (is_array($classroom)) {
                   foreach ($classroom as $student) {                
                     /* First, check if the user (identified by Email or Username) exists, if not, create the user */
                     $user_email_api = $student->Email;
