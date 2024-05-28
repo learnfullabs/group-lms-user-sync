@@ -14,3 +14,11 @@ group_lms_user_sync.custom_json_form:
     _title: 'Add Custom JSON'
   requirements:
     _permission: 'administer group'
+
+group_lms_user_sync.sync_process_form:
+  path: '/admin/group/add-custom-json'
+  defaults:
+    _form: '\Drupal\group_lms_user_sync\Form\GroupLMSUserSyncRunProcess'
+    _title: 'Run the LMS Sync Process'
+  requirements:
+    _permission: 'administer group'
