@@ -73,6 +73,12 @@ class GroupLMSUserSyncRunProcess extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+    $form['form_description'] = [
+      '#type' => 'markup',
+      '#markup' => $this->t('Click here to run the LMS Sync Process.'),
+      '#weight' => 1,            
+    ];
+    
     $form['actions'] = [
       '#type' => 'actions',
     ];
@@ -80,7 +86,6 @@ class GroupLMSUserSyncRunProcess extends FormBase {
     $form['actions']['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Run the LMS Sync Process'),
-      '#description' => $this->t('Click here to run the LMS Sync Process.'),
     ];
 
     return $form;
