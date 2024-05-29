@@ -98,11 +98,15 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
 
   /**
    * Sync users/class groups from the LMI AP Endpoint to Drupal Groups.
+   * 
+   * @param bool $print_debug_messenger_info
+   *   TRUE for printing extra $this->messenger->addStatus() calls for each action
+   *   FALSE otherwise
    *
    * @return int
    *   TRUE on success or FALSE on error
    */
-  public function syncUsersToGroups(): int {
+  public function syncUsersToGroups($print_debug_messenger_info = FALSE): int {
     if (isset($this->endpoint_id) && !empty($this->endpoint_id)) {    
       if (isset($this->endpoint_url) && !empty($this->endpoint_url)) {
         // Create an httpClient Object that will be used for all the requests.
@@ -161,7 +165,11 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
     
                           $count_updated_groups[$user_id_api] = $group->id();
                           $group_name = $group->label();
-                          $this->messenger->addStatus(t("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]));
+
+                          if ($print_debug_messenger_info) {
+                            $this->messenger->addStatus(t("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]));
+                          }
+
                           $this->logger->notice("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
                         }
                       } else {
@@ -193,7 +201,11 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
     
                             $count_updated_groups[$user_id_api] = $group->id();
                             $group_name = $group->label();
-                            $this->messenger->addStatus(t("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]));
+                            
+                            if ($print_debug_messenger_info) {
+                              $this->messenger->addStatus(t("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]));
+                            }
+
                             $this->logger->notice("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
                           }
                         } else {

@@ -95,7 +95,7 @@ class GroupLMSUserSyncRunProcess extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $res = $this->api->syncUsersToGroups();
+    $res = $this->api->syncUsersToGroups(TRUE);
 
     if ($res) {
       $this->messenger->addMessage($this->t('Synced users/group from the LMI Endpoint ! ' . $this->api->getAPIEndpoint()));
