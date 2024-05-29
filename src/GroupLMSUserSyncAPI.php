@@ -173,6 +173,10 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
                           $this->logger->notice("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
                         }
                       } else {
+                        if ($print_debug_messenger_info) {
+                          $this->messenger-addWarning(t("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]));
+                        }
+
                         $this->logger->notice("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]);
                       }
                     } else {
@@ -201,7 +205,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
     
                             $count_updated_groups[$user_id_api] = $group->id();
                             $group_name = $group->label();
-                            
+
                             if ($print_debug_messenger_info) {
                               $this->messenger->addStatus(t("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]));
                             }
@@ -209,6 +213,10 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
                             $this->logger->notice("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
                           }
                         } else {
+                          if ($print_debug_messenger_info) {
+                            $this->messenger-addWarning(t("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]));
+                          }
+                          
                           $this->logger->notice("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]);
                         }
     
