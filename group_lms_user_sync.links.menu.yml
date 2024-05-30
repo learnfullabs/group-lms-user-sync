@@ -8,14 +8,14 @@ group_lms_user_sync.admin.structure.settings:
 
 group_lms_user_sync.custom_json_form:
   route_name: group_lms_user_sync.custom_json_form
-  title: Group LMS User - Import JSON
-  description: 'Group LMS User - Import JSON'
+  title: Import data from JSON snippet
+  description: 'Import data from JSON snippet'
   parent: group_lms_user_sync.admin.structure.settings
   weight: 1
 
 group_lms_user_sync.sync_process_form:
   route_name: group_lms_user_sync.sync_process_form
-  title: Group LMS User - Run Process
-  description: 'Group LMS User - Run Process'
+  title: Run Sync Process
+  description: 'Run Sync Process'
   parent: group_lms_user_sync.admin.structure.settings
   weight: 2
