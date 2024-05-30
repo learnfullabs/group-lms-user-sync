@@ -75,7 +75,7 @@ class GroupLMSUserSyncRunProcess extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $form['form_description'] = [
       '#type' => 'markup',
-      '#markup' => $this->t('Click here to run the Sync Process from the LMS API to the Drupal Groups. Check database logs to look for issues after the sync has been executed.'),
+      '#markup' => $this->t('Click here to run the Sync Process from the LMS API for updating the Drupal Groups in your site. Check database logs to look for issues after the sync has been executed.'),
       '#weight' => 1,            
     ];
     
