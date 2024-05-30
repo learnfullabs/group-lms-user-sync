@@ -6,16 +6,23 @@ group_lms_user_sync.admin.structure.settings:
   parent: system.admin_group
   weight: 15
 
+group_lms_user_sync.settings:
+  route_name: group_lms_user_sync.settings
+  title: Settings
+  description: 'Settings'
+  parent: group_lms_user_sync.admin.structure.settings
+  weight: 1
+
 group_lms_user_sync.custom_json_form:
   route_name: group_lms_user_sync.custom_json_form
   title: Import data from JSON snippet
   description: 'Import data from JSON snippet'
   parent: group_lms_user_sync.admin.structure.settings
-  weight: 1
+  weight: 2
 
 group_lms_user_sync.sync_process_form:
   route_name: group_lms_user_sync.sync_process_form
   title: Run Sync Process
   description: 'Run Sync Process'
   parent: group_lms_user_sync.admin.structure.settings
-  weight: 2
+  weight: 3
