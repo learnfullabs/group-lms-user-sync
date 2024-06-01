@@ -199,7 +199,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
                             }
     
                             $group->addMember($user_new);
-                            $group_relationship = $group->getMember($user_obj)->getGroupRelationship();
+                            $group_relationship = $group->getMember($user_new)->getGroupRelationship();
                             $group_relationship->field_course_ou->value = $group_id_api;
                             $group_relationship->save();
     
@@ -329,7 +329,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
               }
 
               $group->addMember($user_new);
-              $group_relationship = $group->getMember($user_obj)->getGroupRelationship();
+              $group_relationship = $group->getMember($user_new)->getGroupRelationship();
               $group_relationship->field_course_ou->value = $group_id_api;
               $group_relationship->save();
 
@@ -419,7 +419,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
    * @return int
    *   Drupal\user\Entity\User on success or FALSE on error
    */
-  private function createNewUser($username_api, $user_email_api, $language, $group_api_role_id = "") {
+  private function createNewUser($username_api, $user_email_api, $language, $group_api_role_id) {
     /* User doesn't exist, create it for now */
     $user_new = User::create();
 
@@ -437,7 +437,8 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
     $user_new->set("preferred_langcode", $language);
 
     $user_new->activate();
-    $user->addRole($this->getRoleDrupalMapping($group_api_role_id));
+    $drupal_role_id = $this->getRoleDrupalMapping($group_api_role_id);
+    $user_new->addRole($drupal_role_id);
 
     $res = $user_new->save();
 
@@ -461,19 +462,24 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
   private function getRoleDrupalMapping($group_api_role_id) {
     // This is a temporary mapping until we get the real
     // mappings
-    switch ($group_role) {
-      case '3':
-        return "authenticated";
+    // NOTE: "student" role must be created in the Drupal site for now.
+    $drupal_role_id = "";
+
+    switch ($group_api_role_id) {
+      case 3:
+        $drupal_role_id = "student";
         break;
 
-      case '6':
-        return "authenticated";
+      case 6:
+        $drupal_role_id = "student";
         break;
       
       default:
-        return "authenticated";
+        $drupal_role_id = "student";
         break;
     }
+
+    return $drupal_role_id;
   }
 
 }
