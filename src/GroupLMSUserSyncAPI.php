@@ -181,7 +181,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
                       }
                     } else {
                       try {
-                        $user_new = $this->createNewUser($username_api, $user_email_api, $language, "");
+                        $user_new = $this->createNewUser($username_api, $user_email_api, $language, $group_role_api);
     
                         $gids = \Drupal::entityQuery('group')
                         ->condition('field_course_ou', $group_id_api)
@@ -310,7 +310,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
         }
       } else {
         try {
-          $user_new = $this->createNewUser($username_api, $user_email_api, $language, "");
+          $user_new = $this->createNewUser($username_api, $user_email_api, $language, $group_role_api);
 
           $gids = \Drupal::entityQuery('group')
           ->condition('field_course_ou', $group_id_api)
@@ -413,13 +413,13 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
    *   User email from the API.
    * @param string $language
    *   Language of choice for the user.
-   * @param string $user_role
-   *   Role for the user.
+   * @param string $group_api_role_id
+   *   User Role from the API.
    * 
    * @return int
    *   Drupal\user\Entity\User on success or FALSE on error
    */
-  private function createNewUser($username_api, $user_email_api, $language, $user_role = "") {
+  private function createNewUser($username_api, $user_email_api, $language, $group_api_role_id = "") {
     /* User doesn't exist, create it for now */
     $user_new = User::create();
 
@@ -437,6 +437,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
     $user_new->set("preferred_langcode", $language);
 
     $user_new->activate();
+    $user->addRole($this->getRoleDrupalMapping($group_api_role_id));
 
     $res = $user_new->save();
 
@@ -446,6 +447,32 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
       return FALSE;
     } else {
       return $user_new;
+    }
+  }
+
+  /**
+   * Helper function that maps the Group User Role ID to Drupal Group ID
+   *
+   * @param int $group_api_role_id
+   *   The Group User Role ID read from the API
+   * @return drupal_id
+   *   Drupal Role ID
+   */
+  private function getRoleDrupalMapping($group_api_role_id) {
+    // This is a temporary mapping until we get the real
+    // mappings
+    switch ($group_role) {
+      case '3':
+        return "authenticated";
+        break;
+
+      case '6':
+        return "authenticated";
+        break;
+      
+      default:
+        return "authenticated";
+        break;
     }
   }
 
