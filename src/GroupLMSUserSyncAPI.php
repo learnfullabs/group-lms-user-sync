@@ -4,6 +4,7 @@ namespace Drupal\group_lms_user_sync;
 
 use Drupal\user\Entity\User;
 use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\key\KeyRepositoryInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\group\Entity\Group;
 use Drupal\group\Entity\GroupInterface;
@@ -61,6 +62,13 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
   protected $messenger;
 
   /**
+   * Key repository object.
+   *
+   * @var \Drupal\key\KeyRepositoryInterface
+   */
+  protected $repository;
+
+  /**
    * Constructs a new GroupLMSUserSyncAPI object.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
@@ -69,20 +77,21 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
    *   The logger channel factory service.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger.
+   * @param \Drupal\key\KeyRepositoryInterface $repository
+   *   Key Repository
    */
-  public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelFactoryInterface $logger, MessengerInterface $messenger) {
+  public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelFactoryInterface $logger, MessengerInterface $messenger, KeyRepositoryInterface $repository) {
     $this->configFactory = $config_factory;
     $this->logger = $logger->get('group_lms_user_sync');
     $this->messenger = $messenger;
+    $this->repository = $repository;
 
     $config = $this->configFactory->getEditable('group_lms_user_sync.settings');
     $endpoint_id = $config->get('api_endpoint_info') ?? "";
-    $api_version = "v1";
-    $endpoint_url = \Drupal::service('key.repository')->getKey($endpoint_id)->getKeyValue();
+    $endpoint_url = $this->repository->getKey($endpoint_id)->getKeyValue();
     
     $this->endpoint_id = $endpoint_id;
     $this->endpoint_url = $endpoint_url;
-    $this->api_version = $api_version;
   }
 
     /**
@@ -93,6 +102,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
       $container->get('config'),
       $container->get('logger'),
       $container->get('messenger'),
+      $container->get('key.repository')
     );
   }
 
