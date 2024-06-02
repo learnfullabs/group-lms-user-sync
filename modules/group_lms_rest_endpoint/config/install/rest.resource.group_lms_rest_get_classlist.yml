@@ -8,5 +8,4 @@ configuration:
     - hal_json
     - xml
   authentication:
-    - basic_auth
-    - rest_auth
+    - rest_api_authentication
