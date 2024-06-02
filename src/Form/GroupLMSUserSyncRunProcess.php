@@ -10,9 +10,9 @@ use Drupal\group_lms_user_sync\GroupLMSUserSyncAPI;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Class GroupLMSUserSyncAddCustomJson.
+ * Class GroupLMSUserSyncRunProcess.
  */
-class GroupLMSUserSyncAddCustomJson extends FormBase {
+class GroupLMSUserSyncRunProcess extends FormBase {
 
   /**
    * The GroupLMSUserSyncAPI wrapper.
@@ -66,27 +66,26 @@ class GroupLMSUserSyncAddCustomJson extends FormBase {
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'group_lms_user_sync_custom_json';
+    return 'group_lms_user_sync_run_process';
   }
 
   /**
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $form['json_data'] = [
-      '#title' => $this->t("JSON Snippet"),
-      '#type' => 'textarea',
-      '#description' => $this->t('Paste the JSON Content here for updating/adding new users to the groups. Refer to the README.md for more information on the structure of the JSON Snippet.'),
-      '#default_value' => "",
+    $form['form_description'] = [
+      '#type' => 'markup',
+      '#markup' => $this->t('Click here to run the Sync Process from the LMS API for updating the Drupal Groups in your site. Check database logs to look for issues after the sync has been executed.'),
+      '#weight' => 1,            
     ];
-
+    
     $form['actions'] = [
       '#type' => 'actions',
     ];
 
     $form['actions']['submit'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Process JSON File'),
+      '#value' => $this->t('Run the Sync Process'),
     ];
 
     return $form;
@@ -96,18 +95,12 @@ class GroupLMSUserSyncAddCustomJson extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $json_data = $form_state->getValue('json_data');
-
-    if (!$json_data) {
-      $this->messenger->AddError("JSON Data field is empty.");
-    }
-
-    $res = $this->api->syncFromTextField($json_data);
+    $res = $this->api->syncUsersToGroups(TRUE);
 
     if ($res) {
-      $this->messenger->addMessage($this->t('Processed the JSON Data and updated groups.'));
+      $this->messenger->addMessage($this->t('Synced users/group from the LMI Endpoint ! ' . $this->api->getAPIEndpoint()));
     } else {
-      $this->messenger->AddError($this->t('Error when updating the groups from the JSON Data. Check database logs for more info.'));
+      $this->messenger->AddError($this->t('Unknown Error - Please check the Database Log table for more information !'));
     }
   }
 
