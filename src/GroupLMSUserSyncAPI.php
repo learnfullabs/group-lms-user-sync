@@ -27,7 +27,14 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
   protected $endpoint_id;
 
   /**
-   * URL of the LMS Rest Endpoint.
+   * LMS Rest Endpoint Data.
+   *
+   * @var string
+   */
+  protected $endpoint_data;
+
+  /**
+   * URL of the LMS Endpoint.
    *
    * @var string
    */
@@ -88,10 +95,9 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
 
     $config = $this->configFactory->getEditable('group_lms_user_sync.settings');
     $endpoint_id = $config->get('api_endpoint_info') ?? "";
-    $endpoint_url = $this->repository->getKey($endpoint_id)->getKeyValue();
-    
+
     $this->endpoint_id = $endpoint_id;
-    $this->endpoint_url = $endpoint_url;
+    $this->endpoint_data = $this->repository->getKey($endpoint_id)->getKeyValue();
   }
 
     /**
@@ -118,9 +124,13 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
    */
   public function syncUsersToGroups($print_debug_messenger_info = FALSE): int {
     if (isset($this->endpoint_id) && !empty($this->endpoint_id)) {    
-      if (isset($this->endpoint_url) && !empty($this->endpoint_url)) {
+      if (isset($this->endpoint_data) && !empty($this->endpoint_data)) {
         // Create an httpClient Object that will be used for all the requests.
         $client = \Drupal::httpClient();
+
+        $endpoint_data = json_decode($this->endpoint_data);
+        $this->endpoint_url = $endpoint_data->url;
+        $auth = 'Basic '. base64_encode($endpoint_data->username . ':' . $endpoint_data->password);
 
         /* Get a list of all the Group API IDs stored in the Drupal groups */
         $group_ids = $this->getAPIGroupIds();
@@ -131,7 +141,12 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
               'http_errors' => TRUE,
               'query' => [
                 '_format' => 'json'
-              ]
+              ],
+              'headers' => [
+                'Authorization' => $auth,
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+             ],
             ]);
           
             if (!empty($request)) {
@@ -231,6 +246,11 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
                         }
     
                       } catch (\Exception $e) {
+                        if ($print_debug_messenger_info) {
+                          $this->messenger-addError(t("Error when creating new user: @username", ['@username' => $username_api]));
+                        }
+                        
+                        $this->logger->error("Error when creating new user: @username", ['@username' => $username_api]);
                         watchdog_exception('group_lms_user_sync', $e);
                       }
     
@@ -241,6 +261,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
             }
           } catch (\Exception $e) {
             watchdog_exception('group_lms_user_sync', $e);
+            return FALSE;
           }
         }
       } else {
@@ -355,6 +376,8 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
           }
 
         } catch (\Exception $e) {
+          $this->messenger-addError(t("Error when creating new user: @username", ['@username' => $username_api]));
+          $this->logger->error("Error when creating new user: @username", ['@username' => $username_api]);
           watchdog_exception('group_lms_user_sync', $e);
         }
 

@@ -1,8 +1,10 @@
 name: 'Group LMS Rest Endpoint'
-description: 'Enables a test Endpoint that returns class information'
+description: 'Enables a test LMS Endpoint that returns Classroom groups information'
 package: 'Group'
 type: 'module'
 core_version_requirement: ^9.5 || ^10
 dependencies:
   - 'drupal:restui'
+  - 'drupal:serialization'
+  - 'drupal:rest_api_authentication'
   - 'group_lms_user_sync:group_lms_user_sync'
