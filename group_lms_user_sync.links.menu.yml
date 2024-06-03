@@ -26,3 +26,10 @@ group_lms_user_sync.sync_process_form:
   description: 'Run Sync Process'
   parent: group_lms_user_sync.admin.structure.settings
   weight: 3
+
+entity.group_log.collection:
+  title: 'Group Log Listing'
+  route_name: entity.group_log.collection
+  description: 'List Group Log entities'
+  parent: group_lms_user_sync.admin.structure.settings
+  weight: 4

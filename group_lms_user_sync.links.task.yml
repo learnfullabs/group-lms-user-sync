@@ -1,0 +1,17 @@
+# Define the 'local' links for the module
+
+group_log.view:
+  route_name: entity.group_log.canonical
+  base_route: entity.group_log.canonical
+  title: View
+
+group_log.page_edit:
+  route_name: entity.group_log.edit_form
+  base_route: entity.group_log.canonical
+  title: Edit
+
+group_log.delete_confirm:
+  route_name:  entity.group_log.delete_form
+  base_route:  entity.group_log.canonical
+  title: Delete
+  weight: 10

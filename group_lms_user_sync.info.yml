@@ -10,3 +10,4 @@ dependencies:
   - 'drupal:options'
   - 'entity:entity'
   - 'flexible_permissions:flexible_permissions'
+  - entity_reference

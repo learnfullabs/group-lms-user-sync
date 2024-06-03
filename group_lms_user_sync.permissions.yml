@@ -1,0 +1,11 @@
+view group_log entity:
+  title: 'View Group Log entity'
+add group_log entity:
+  title: 'Add Group Log entity'
+edit group_log entity:
+  title: 'Edit Group Log Entity'
+delete group_log entity:
+  title: 'Delete Group Log entity'
+administer group_log entity:
+  title: 'Administer Group Log entity'
+  restrict access: TRUE
