@@ -102,7 +102,7 @@ interface GroupLogInterface extends ContentEntityInterface, EntityOwnerInterface
   public function getEnrollStatus();
 
   /**
-   * Sets the Group Log creation timestamp.
+   * Sets the Group Log Enroll status.
    *
    * @param bool $enroll_status
    *   TRUE to record that the user was enrolled in the Group, FALSE if the

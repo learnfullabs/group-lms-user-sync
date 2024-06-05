@@ -73,3 +73,11 @@ entity.group_log.delete_form:
     _title: 'Delete Group Log'
   requirements:
     _entity_access: 'group_log.delete'
+
+group_lms_user_sync.group_log_settings:
+  path: '/admin/group/group-log-settings'
+  defaults:
+    _form: '\Drupal\group_lms_user_sync\Form\GroupLogSettingsForm'
+    _title: 'Contact Settings'
+  requirements:
+    _permission: 'administer contact entity'
