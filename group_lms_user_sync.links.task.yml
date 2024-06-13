@@ -1,4 +1,9 @@
-# Define the 'local' links for the module
+# Define the 'local' links for the GroupLog entity
+
+group_log.settings_tab:
+  route_name: group_lms_user_sync.group_log_settings
+  title: Settings
+  base_route: group_lms_user_sync.group_log_settings
 
 group_log.view:
   route_name: entity.group_log.canonical

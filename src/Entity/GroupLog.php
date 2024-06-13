@@ -91,6 +91,7 @@ use Drupal\user\UserInterface;
  *     "label" = "name",
  *     "uuid" = "uuid",
  *     "uid" = "user_id",
+ *     "langcode" = "langcode",
  *   },
  *   links = {
  *     "canonical" = "/admin/group/reports/group_log/{group_log}",
@@ -129,18 +130,6 @@ class GroupLog extends ContentEntityBase implements GroupLogInterface {
 
   use EntityChangedTrait; // Implements methods defined by EntityChangedInterface.
 
-  /**
-   * {@inheritdoc}
-   *
-   * When a new entity instance is added, set the user_id entity reference to
-   * the current user as the creator of the instance.
-   */
-  public static function preCreate(EntityStorageInterface $storage_controller, array &$values) {
-    parent::preCreate($storage_controller, $values);
-    $values += array(
-      'user_id' => \Drupal::currentUser()->id(),
-    );
-  }
 
   /**
    * {@inheritdoc}
@@ -296,7 +285,7 @@ class GroupLog extends ContentEntityBase implements GroupLogInterface {
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
-    // Group OU of the entity
+    // Group OU ID of the Group API
     // We set display options for the view as well as the form.
     // Users with correct privileges can change the view and edit configuration.
     $fields['group_ou'] = BaseFieldDefinition::create('string')
@@ -342,6 +331,9 @@ class GroupLog extends ContentEntityBase implements GroupLogInterface {
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
+    // Enroll Status of the Group Log event
+    // TRUE if the user was enrolled in the Group, FALSE if the user was removed
+    // from the Group
     $fields['enroll_status'] = BaseFieldDefinition::create('boolean')
     ->setLabel(t('Enroll Status'))
     ->setDescription(t('A boolean indicating that user was enrolled (TRUE) or not (FALSE)'))
