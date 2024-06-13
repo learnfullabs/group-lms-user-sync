@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\group_lms_user_sync;
+namespace Drupal\group_lms_user_sync\Entity;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\user\EntityOwnerInterface;

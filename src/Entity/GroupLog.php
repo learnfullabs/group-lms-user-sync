@@ -7,7 +7,6 @@ use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityChangedTrait;
-use Drupal\group_lms_user_sync\GroupLogInterface;
 use Drupal\user\UserInterface;
 
 /**
@@ -96,8 +95,8 @@ use Drupal\user\UserInterface;
  *   links = {
  *     "canonical" = "/admin/group/reports/group_log/{group_log}",
  *     "edit-form" = "/admin/group/reports/group_log/{group_log}/edit",
- *     "delete-form" = "/admin/group/reports/group_log/{group_log}/delete,
- *     "collection" = "/admin/group/reports/group_log/list"
+ *     "delete-form" = "/admin/group/reports/group_log/{group_log}/delete",
+ *     "collection" = "/admin/group/reports/group_log/list",
  *   },
  *   field_ui_base_route = "group_lms_user_sync.group_log_settings",
  * )
@@ -129,7 +128,6 @@ use Drupal\user\UserInterface;
 class GroupLog extends ContentEntityBase implements GroupLogInterface {
 
   use EntityChangedTrait; // Implements methods defined by EntityChangedInterface.
-
 
   /**
    * {@inheritdoc}
