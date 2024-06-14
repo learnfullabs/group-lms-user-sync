@@ -95,10 +95,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
     $this->repository = $repository;
 
     $config = $this->configFactory->getEditable('group_lms_user_sync.settings');
-    $endpoint_id = $config->get('api_endpoint_info') ?? "";
-
-    $this->endpoint_id = $endpoint_id;
-    $this->endpoint_data = $this->repository->getKey($endpoint_id)->getKeyValue();
+    $this->endpoint_id = $config->get('api_endpoint_info') ?? "";
   }
 
     /**
@@ -124,7 +121,10 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
    *   TRUE on success or FALSE on error
    */
   public function syncUsersToGroups($print_debug_messenger_info = FALSE): int {
-    if (isset($this->endpoint_id) && !empty($this->endpoint_id)) {    
+    if (isset($this->endpoint_id) && !empty($this->endpoint_id)) {
+        
+      $this->endpoint_data = $this->repository->getKey($this->endpoint_id)->getKeyValue();
+  
       if (isset($this->endpoint_data) && !empty($this->endpoint_data)) {
         // Create an httpClient Object that will be used for all the requests.
         $client = \Drupal::httpClient();
@@ -180,7 +180,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
                           $group = Group::load($gid);
     
                           if (!$group) {
-                            $this->logger('group_lms_user_sync')->error("Failed to load group identified by Group API ID @groupname", ['@groupname' => $group_id_api ]);
+                            $this->logger->error("Failed to load group identified by Group API ID @groupname", ['@groupname' => $group_id_api ]);
                             continue;
                           }
     
@@ -292,7 +292,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
       }
     } else {
       // Endpoint ID was not set or is empty
-      $this->logger->warning("Failed to set Endpoint URL");
+      $this->logger->warning("Failed to set Endpoint URL - Have you set up the Key Authentication Endpoint?");
       return FALSE;
     }
 
@@ -341,7 +341,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
             $group = Group::load($gid);
 
             if (!$group) {
-              $this->logger('group_lms_user_sync')->error("Failed to load group identified by Group API ID @groupname", ['@groupname' => $group_id_api ]);
+              $this->logger->error("Failed to load group identified by Group API ID @groupname", ['@groupname' => $group_id_api ]);
               continue;
             }
 
