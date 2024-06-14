@@ -11,6 +11,7 @@ use Drupal\group\Entity\GroupInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\group_lms_user_sync\Entity\GroupLog;
 
 /**
  * GroupLMSUserSyncAPI.
@@ -190,6 +191,15 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
     
                           $count_updated_groups[$user_id_api] = $group->id();
                           $group_name = $group->label();
+
+                          $group_log_event = GroupLog::create(array(
+                            'name' => $group_name . "-" . $group_id_api . "-" . $user_obj->getAccountName(),
+                            'group_name' => $group->label(),
+                            'group_ou' => $group_id_api,
+                            'username' => $user_obj->getAccountName(),
+                            'enroll_status' => 1,
+                          ));
+                          $group_log_event->save();
 
                           if ($print_debug_messenger_info) {
                             $this->messenger->addStatus(t("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]));
