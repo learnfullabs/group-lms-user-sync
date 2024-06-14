@@ -132,6 +132,21 @@ class GroupLog extends ContentEntityBase implements GroupLogInterface {
   /**
    * {@inheritdoc}
    */
+  public function getName() {
+    return $this->get('name')->value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setName($name) {
+    $this->set('name', $name);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getCreatedTime() {
     return $this->get('created')->value;
   }
@@ -260,12 +275,34 @@ class GroupLog extends ContentEntityBase implements GroupLogInterface {
       ->setDescription(t('The UUID of the Group Log entity.'))
       ->setReadOnly(TRUE);
 
+      $fields['name'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Group Log Name (Entity Label)'))
+      ->setDescription(t(
+        'Group Log Name: Can be used to set a title to this Group Log Event.'
+      ))
+      ->setSettings([
+        'max_length' => 255,
+        'text_processing' => 0,
+      ])
+      ->setDefaultValue('')
+      ->setDisplayOptions('view', [
+        'label' => 'above',
+        'type' => 'string',
+        'weight' => -6,
+      ])
+      ->setDisplayOptions('form', [
+        'type' => 'string_textfield',
+        'weight' => -6,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
     // Group name of the entity
     // We set display options for the view as well as the form.
     // Users with correct privileges can change the view and edit configuration.
     $fields['group_name'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Group Name'))
-      ->setDescription(t('The Group Name of the Group Log entity.'))
+      ->setDescription(t('The Group Name logged by the Group Log Event.'))
       ->setSettings(array(
         'default_value' => '',
         'max_length' => 255,
@@ -274,11 +311,11 @@ class GroupLog extends ContentEntityBase implements GroupLogInterface {
       ->setDisplayOptions('view', array(
         'label' => 'above',
         'type' => 'string',
-        'weight' => -6,
+        'weight' => -5,
       ))
       ->setDisplayOptions('form', array(
         'type' => 'string_textfield',
-        'weight' => -6,
+        'weight' => -5,
       ))
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
@@ -288,7 +325,7 @@ class GroupLog extends ContentEntityBase implements GroupLogInterface {
     // Users with correct privileges can change the view and edit configuration.
     $fields['group_ou'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Group OU'))
-      ->setDescription(t('The Group OU of the Group Log entity.'))
+      ->setDescription(t('The Group OU logged by the Group Log Event.'))
       ->setSettings(array(
         'default_value' => '',
         'max_length' => 255,
@@ -297,11 +334,11 @@ class GroupLog extends ContentEntityBase implements GroupLogInterface {
       ->setDisplayOptions('view', array(
         'label' => 'above',
         'type' => 'string',
-        'weight' => -6,
+        'weight' => -4,
       ))
       ->setDisplayOptions('form', array(
         'type' => 'string_textfield',
-        'weight' => -6,
+        'weight' => -4,
       ))
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
@@ -311,7 +348,7 @@ class GroupLog extends ContentEntityBase implements GroupLogInterface {
     // Users with correct privileges can change the view and edit configuration.
     $fields['username'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Username Group Log Event'))
-      ->setDescription(t('The Username Group Log Event.'))
+      ->setDescription(t('The Username logged by the Group Log Event.'))
       ->setSettings(array(
         'default_value' => '',
         'max_length' => 255,
@@ -320,11 +357,11 @@ class GroupLog extends ContentEntityBase implements GroupLogInterface {
       ->setDisplayOptions('view', array(
         'label' => 'above',
         'type' => 'string',
-        'weight' => -6,
+        'weight' => -3,
       ))
       ->setDisplayOptions('form', array(
         'type' => 'string_textfield',
-        'weight' => -6,
+        'weight' => -3,
       ))
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
@@ -335,34 +372,19 @@ class GroupLog extends ContentEntityBase implements GroupLogInterface {
     $fields['enroll_status'] = BaseFieldDefinition::create('boolean')
     ->setLabel(t('Enroll Status'))
     ->setDescription(t('A boolean indicating that user was enrolled (TRUE) or not (FALSE)'))
-    ->setDefaultValue(TRUE);
-
-    // Owner field of the entity.
-    // Entity reference field, holds the reference to the user object.
-    // The view shows the user name field of the user.
-    // The form presents a auto complete field for the user name.
-    $fields['user_id'] = BaseFieldDefinition::create('entity_reference')
-      ->setLabel(t('User Name'))
-      ->setDescription(t('The Name of the associated user.'))
-      ->setSetting('target_type', 'user')
-      ->setSetting('handler', 'default')
-      ->setDisplayOptions('view', array(
-        'label' => 'above',
-        'type' => 'entity_reference_label',
-        'weight' => -3,
-      ))
-      ->setDisplayOptions('form', array(
-        'type' => 'entity_reference_autocomplete',
-        'settings' => array(
-          'match_operator' => 'CONTAINS',
-          'size' => 60,
-          'autocomplete_type' => 'tags',
-          'placeholder' => '',
-        ),
-        'weight' => -3,
-      ))
-      ->setDisplayConfigurable('form', TRUE)
-      ->setDisplayConfigurable('view', TRUE);
+    ->setDefaultValue(TRUE)
+    ->setSettings(['on_label' => 'Enrolled', 'off_label' => 'Unenrolled'])
+    ->setDisplayOptions('view', [
+      'label' => 'visible',
+      'type' => 'boolean',
+      'weight' => -2,
+    ])
+    ->setDisplayOptions('form', [
+      'type' => 'boolean_checkbox',
+      'weight' => -2,
+    ])
+    ->setDisplayConfigurable('view', TRUE)
+    ->setDisplayConfigurable('form', TRUE);
 
     
       $fields['langcode'] = BaseFieldDefinition::create('language')

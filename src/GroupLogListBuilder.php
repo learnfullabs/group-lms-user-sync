@@ -44,7 +44,7 @@ class GroupLogListBuilder extends EntityListBuilder {
     $header['group_name'] = $this->t('Name');
     $header['group_ou'] = $this->t('Group OU');
     $header['username'] = $this->t('Username');
-    $header['enroll_status'] = $this->t('Username');
+    $header['enroll_status'] = $this->t('Enroll Status');
 
     return $header + parent::buildHeader();
   }

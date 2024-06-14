@@ -36,7 +36,7 @@ entity.group_log.collection:
   weight: 4
 
 group_lms_user_sync.group_log_settings:
-  route_name: group_lms_user_sync.settings
+  route_name: group_lms_user_sync.group_log_settings
   title: GroupLog Settings
   description: 'GroupLog Settings'
   parent: group_lms_user_sync.admin.structure.settings

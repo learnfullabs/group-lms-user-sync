@@ -13,6 +13,26 @@ use Drupal\Core\Entity\EntityChangedInterface;
 interface GroupLogInterface extends ContentEntityInterface, EntityOwnerInterface, EntityChangedInterface {
   
   /**
+   * Gets the Group Log Name.
+   *
+   * @return string
+   *   Name of the Group Log.
+   */
+  public function getName();
+
+  /**
+   * Sets the Group Log Name.
+   *
+   * @param string $name
+   *   The the Group Log Name.
+   *
+   * @return \Drupal\group_lms_user_sync\Entity\GroupLogInterface
+   *   The called Group Log entity.
+   */
+  public function setName($name);
+
+
+  /**
    * Gets the Group Log creation timestamp.
    *
    * @return int
