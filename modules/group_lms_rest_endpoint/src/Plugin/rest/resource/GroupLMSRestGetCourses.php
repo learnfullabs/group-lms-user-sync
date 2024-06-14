@@ -10,21 +10,19 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Cache\CacheableResponseInterface;
 
 /**
- * Provides a Class List Endpoint
+ * Provides a Get Courses Endpoint
  * 
- * Returns a Group object (the course) identified by the id {orgUnitId}
- * this Group object contains a set of student objects who belong to that 
- * course, or returns an error message/empty array otherwise.
- * 
+ * Returns a list of available courses identified by the OU ID
+ *
  * @RestResource(
- *   id = "group_lms_rest_get_classlist",
- *   label = @Translation("Group LMS Rest Get Class list"),
+ *   id = "group_lms_rest_get_courses",
+ *   label = @Translation("Group LMS Rest Get Courses"),
  *   uri_paths = {
- *     "canonical" = "/api/le/{version}/{orgUnitId}/classlist/paged"
+ *     "canonical" = "/api/le/{version}/courses/paged"
  *   }
  * )
  */
-class GroupLMSRestGetClasslist extends ResourceBase {
+class GroupLMSRestGetCourses extends ResourceBase {
   /**
    * A current user instance.
    *
@@ -72,19 +70,17 @@ class GroupLMSRestGetClasslist extends ResourceBase {
    * 
    * @return \Drupal\rest\ResourceResponse
    */
-  public function get($version = "v1", $orgUnitId = 100101) {
+  public function get($version = "v1") {
     $path_assets = DRUPAL_ROOT . "/" . \Drupal::service('extension.list.module')->getPath('group_lms_rest_endpoint');
-    $jsonContents = [];
+    $basenames = [];
 
-    if (isset($orgUnitId) && !empty($orgUnitId)) {
-      if (file_exists($path_assets . "/assets/groups/" . $orgUnitId . ".json")) {
-        $jsonContents = json_decode(file_get_contents($path_assets . "/assets/groups/" . $orgUnitId . ".json"), true);
-      } else {
-        $jsonContents = "Group ID does not exist";
-      }
+    $assets = glob($path_assets  . "/assets/groups/*.json");
+
+    foreach ($assets as $asset) {
+      $basenames[] = basename($asset, ".json");
     }
 
-    $response = $jsonContents;
+    $response = $basenames;
 
     // TODO: Return error code when required
     return new ResourceResponse($response);

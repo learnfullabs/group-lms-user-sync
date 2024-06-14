@@ -1,0 +1,11 @@
+id: group_lms_rest_get_courses
+granularity: resource
+configuration:
+  methods:
+    - GET
+  formats:
+    - json
+    - hal_json
+    - xml
+  authentication:
+    - rest_api_authentication

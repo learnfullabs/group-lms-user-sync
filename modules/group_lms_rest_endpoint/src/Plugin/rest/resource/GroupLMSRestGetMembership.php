@@ -10,21 +10,21 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Cache\CacheableResponseInterface;
 
 /**
- * Provides a Class List Endpoint
+ * Provides a Class Get Membership Endpoint
  * 
- * Returns a Group object (the course) identified by the id {orgUnitId}
- * this Group object contains a set of student objects who belong to that 
- * course, or returns an error message/empty array otherwise.
- * 
+ * Returns an user object if the user identified by the email studentEmail
+ * belongs to the group identified by orgUnitId, or returns an error message/empty array
+ * otherwise.
+ *
  * @RestResource(
- *   id = "group_lms_rest_get_classlist",
- *   label = @Translation("Group LMS Rest Get Class list"),
+ *   id = "group_lms_rest_get_membership",
+ *   label = @Translation("Group LMS Rest Get Membership"),
  *   uri_paths = {
- *     "canonical" = "/api/le/{version}/{orgUnitId}/classlist/paged"
+ *     "canonical" = "/api/le/{version}/{orgUnitId}/{studentEmail}"
  *   }
  * )
  */
-class GroupLMSRestGetClasslist extends ResourceBase {
+class GroupLMSRestGetMembershop extends ResourceBase {
   /**
    * A current user instance.
    *
@@ -72,13 +72,28 @@ class GroupLMSRestGetClasslist extends ResourceBase {
    * 
    * @return \Drupal\rest\ResourceResponse
    */
-  public function get($version = "v1", $orgUnitId = 100101) {
+  public function get($version = "v1", $orgUnitId, $studentEmail) {
     $path_assets = DRUPAL_ROOT . "/" . \Drupal::service('extension.list.module')->getPath('group_lms_rest_endpoint');
     $jsonContents = [];
 
     if (isset($orgUnitId) && !empty($orgUnitId)) {
       if (file_exists($path_assets . "/assets/groups/" . $orgUnitId . ".json")) {
-        $jsonContents = json_decode(file_get_contents($path_assets . "/assets/groups/" . $orgUnitId . ".json"), true);
+        if (isset($studentEmail) && !empty($studentEmail)) {
+          $course_list = json_decode(file_get_contents($path_assets . "/assets/groups/" . $orgUnitId . ".json"), true);
+          $user_in_course = FALSE;
+
+          foreach ($course_list as $student) {
+            // Student is in the course, stop
+            if ($student->Email == $studentEmail) {
+              $user_in_course = TRUE;
+              break;
+            }
+          }
+
+          if ($user_in_course) {
+            $jsonContents = $student;
+          }
+        }      
       } else {
         $jsonContents = "Group ID does not exist";
       }
