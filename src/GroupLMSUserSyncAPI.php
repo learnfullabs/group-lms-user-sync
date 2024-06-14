@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\group_lms_user_sync;
 
 use Drupal\user\Entity\User;
