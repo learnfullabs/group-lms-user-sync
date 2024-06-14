@@ -22,3 +22,62 @@ group_lms_user_sync.sync_process_form:
     _title: 'Run the LMS Sync Process'
   requirements:
     _permission: 'administer group'
+
+# Routes for the Group Log Entity (for logging all the Group User Enroll/UnEnroll events)
+
+# Route name can be used in several places; e.g. links, redirects, and local
+# actions.
+entity.group_log.canonical:
+  path: '/admin/group/reports/group_log/{group_log}'
+  defaults:
+  # Calls the view controller, defined in the annotation of the Group Log entity
+    _entity_view: 'group_log'
+    _title: 'Group Log Content'
+  requirements:
+  # Calls the access controller of the entity, $operation 'view'
+    _entity_access: 'group_log.view'
+
+entity.group_log.collection:
+  path: '/admin/group/reports/group_log/list'
+  defaults:
+  # Calls the list controller, defined in the annotation of the Group Log entity.
+    _entity_list: 'group_log'
+    _title: 'Group Log List'
+  requirements:
+  # Checks for permission directly.
+    _permission: 'administer group_log entity'
+
+group_lms_user_sync.group_log_add:
+  path: '/admin/group/reports/group_log/add'
+  defaults:
+  # Calls the form.add controller, defined in the Group Log entity.
+    _entity_form: group_log.add
+    _title: 'Add Group Log'
+  requirements:
+    _entity_create_access: 'group_log'
+
+entity.group_log.edit_form:
+  path: '/admin/group/reports/group_log/{group_log}/edit'
+  defaults:
+  # Calls the form.edit controller, defined in the Group Log entity.
+    _entity_form: group_log.edit
+    _title: 'Edit Group Log'
+  requirements:
+    _entity_access: 'group_log.edit'
+
+entity.group_log.delete_form:
+  path: '/admin/group/reports/group_log/{group_log}/delete'
+  defaults:
+    # Calls the form.delete controller, defined in the Group Log entity.
+    _entity_form: group_log.delete
+    _title: 'Delete Group Log'
+  requirements:
+    _entity_access: 'group_log.delete'
+
+group_lms_user_sync.group_log_settings:
+  path: '/admin/group/group-log-settings'
+  defaults:
+    _form: '\Drupal\group_lms_user_sync\Form\GroupLogSettingsForm'
+    _title: 'Contact Settings'
+  requirements:
+    _permission: 'administer contact entity'

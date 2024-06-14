@@ -1,0 +1,11 @@
+# All action links the GroupLog entity
+
+group_lms_user_sync.group_log_add:
+  # Which route will be called by the link
+  route_name: group_lms_user_sync.group_log_add
+  title: 'Add Group Log'
+
+  # Where will the link appear, defined by route name.
+  appears_on:
+    - entity.group_log.collection
+    - entity.group_log.canonical

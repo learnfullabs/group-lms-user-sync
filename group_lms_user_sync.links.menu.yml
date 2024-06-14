@@ -26,3 +26,25 @@ group_lms_user_sync.sync_process_form:
   description: 'Run Sync Process'
   parent: group_lms_user_sync.admin.structure.settings
   weight: 3
+
+group_lms_user_sync.group_log_report:
+  url: internal:/admin/group/reports/enrollments
+  title: Group Log Report
+  description: 'Group Log Report'
+  parent: group_lms_user_sync.admin.structure.settings
+  weight: 4
+
+# Menu items definition for the Group Log entity
+entity.group_log.collection:
+  title: 'Group Log Listing'
+  route_name: entity.group_log.collection
+  description: 'List Group Log entities'
+  parent: group_lms_user_sync.admin.structure.settings
+  weight: 5
+
+group_lms_user_sync.group_log_settings:
+  route_name: group_lms_user_sync.group_log_settings
+  title: Group Log Settings
+  description: 'Group Log Settings'
+  parent: group_lms_user_sync.admin.structure.settings
+  weight: 6
