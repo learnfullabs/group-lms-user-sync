@@ -535,12 +535,12 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
               if (!empty($request)) {
                 if ($request->getBody()) {
                   $student_info = json_decode($request->getBody());
+                  $group_name = $group->label();
+                  $username = $group_user->getAccountName();
   
                   if (!is_array($student_info) || (count($student_info) < 1)) {
-                    file_put_contents("/tmp/studentinfo".$group_user->id(), json_encode($student_info));
+                    file_put_contents("/tmp/studentinfo".$group_user->id()."-".$group_id."-".$username, json_encode($student_info));
                     /* $group->removeMember($group_user);
-                    $group_name = $group->label();
-                    $username = $group_user->getAccountName();
           
                     // Logs Group Activity
                     $group_log_event = GroupLog::create(array(
@@ -554,6 +554,8 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
           
                     $this->messenger->addStatus(t("Removed user @username from group @groupname", ['@username' => $username, '@groupname' => $group_id]));
                     $this->logger->notice("Removed user @username from group @groupname", ['@username' => $username, '@groupname' => $group_id]); */
+                  } else {
+                    file_put_contents("/tmp/studentinfo".$group_user->id()."-".$group_id."-".$username, json_encode($student_info));
                   }
                 }
               }
