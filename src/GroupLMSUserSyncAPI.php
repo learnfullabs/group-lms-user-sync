@@ -539,7 +539,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
                   $username = $group_user->getAccountName();
   
                   if (!is_array($student_info) || (count($student_info) < 1)) {
-                    file_put_contents("/tmp/studentinfo".$group_user->id()."-".$group_id."-".$username, json_encode($student_info));
+                    file_put_contents("/tmp/un-studentinfo".$group_user->id()."-".$group_id."-".$username, json_encode($student_info));
                     /* $group->removeMember($group_user);
           
                     // Logs Group Activity

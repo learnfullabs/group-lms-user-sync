@@ -82,6 +82,7 @@ class GroupLMSRestGetMembership extends ResourceBase {
           $course_list = json_decode(file_get_contents($path_assets . "/assets/groups/" . $orgUnitId . ".json"), true);
           $user_in_course = FALSE;
 
+          file_put_contents("/tmp/studentinfo".$studentEmail, $student->Email);
           foreach ($course_list as $student) {
             // Student is in the course, stop the loop
             if ($student->Email == $studentEmail) {
