@@ -12,7 +12,7 @@ use Drupal\Core\Cache\CacheableResponseInterface;
 /**
  * Provides a Class Get Membership Endpoint
  * 
- * Returns an user object if the user identified by the email studentEmail
+ * Returns an user object if the user identified by username
  * belongs to the group identified by orgUnitId, or returns an error message/empty array
  * otherwise.
  *
@@ -20,7 +20,7 @@ use Drupal\Core\Cache\CacheableResponseInterface;
  *   id = "group_lms_rest_get_membership",
  *   label = @Translation("Group LMS Rest Get Membership"),
  *   uri_paths = {
- *     "canonical" = "/api/le/{version}/{orgUnitId}/{studentEmail}"
+ *     "canonical" = "/api/le/{version}/{orgUnitId}/{username}"
  *   }
  * )
  */
@@ -72,20 +72,19 @@ class GroupLMSRestGetMembership extends ResourceBase {
    * 
    * @return \Drupal\rest\ResourceResponse
    */
-  public function get($version = "v1", $orgUnitId, $studentEmail) {
+  public function get($version = "v1", $orgUnitId, $username) {
     $path_assets = DRUPAL_ROOT . "/" . \Drupal::service('extension.list.module')->getPath('group_lms_rest_endpoint');
     $jsonContents = [];
 
     if (isset($orgUnitId) && !empty($orgUnitId)) {
       if (file_exists($path_assets . "/assets/groups/" . $orgUnitId . ".json")) {
-        if (isset($studentEmail) && !empty($studentEmail)) {
+        if (isset($username) && !empty($username)) {
           $course_list = json_decode(file_get_contents($path_assets . "/assets/groups/" . $orgUnitId . ".json"), true);
           $user_in_course = FALSE;
 
-          file_put_contents("/tmp/studentinfo".$studentEmail, $student->Email);
           foreach ($course_list as $student) {
             // Student is in the course, stop the loop
-            if ($student->Email == $studentEmail) {
+            if ($student->Username == $username) {
               $user_in_course = TRUE;
               break;
             }

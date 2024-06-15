@@ -520,7 +520,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
 
           foreach ($group_api_ids as $group_id) {
             try {
-              $request = $client->get($this->endpoint_url . '/' . $this->api_version . '/' . $group_id . '/' . $group_user->getEmail(), [
+              $request = $client->get($this->endpoint_url . '/' . $this->api_version . '/' . $group_id . '/' . $group_user->getAccountName(), [
                 'http_errors' => TRUE,
                 'query' => [
                   '_format' => 'json'
