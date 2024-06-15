@@ -39,7 +39,7 @@ class GroupLMSUserSyncCommands extends DrushCommands {
    * @usage gl-us
    */
   public function syncUsersGroups() {
-    $res = $this->api->syncUsersToGroups(TRUE);
+    $res = $this->api->syncUsersToGroups();
 
     if ($res) {
       $this->io()->success('Synced users/group from the LMI Endpoint ! ' . $this->api->getAPIEndpoint());

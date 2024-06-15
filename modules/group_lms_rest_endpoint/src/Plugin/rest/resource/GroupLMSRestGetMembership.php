@@ -24,7 +24,7 @@ use Drupal\Core\Cache\CacheableResponseInterface;
  *   }
  * )
  */
-class GroupLMSRestGetMembershop extends ResourceBase {
+class GroupLMSRestGetMembership extends ResourceBase {
   /**
    * A current user instance.
    *
@@ -83,7 +83,7 @@ class GroupLMSRestGetMembershop extends ResourceBase {
           $user_in_course = FALSE;
 
           foreach ($course_list as $student) {
-            // Student is in the course, stop
+            // Student is in the course, stop the loop
             if ($student->Email == $studentEmail) {
               $user_in_course = TRUE;
               break;
@@ -92,6 +92,8 @@ class GroupLMSRestGetMembershop extends ResourceBase {
 
           if ($user_in_course) {
             $jsonContents = $student;
+          } else {
+            $jsonContents = "User is not in the Group";
           }
         }      
       } else {

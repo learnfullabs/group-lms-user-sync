@@ -112,15 +112,11 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
 
   /**
    * Sync users/class groups from the LMI AP Endpoint to Drupal Groups.
-   * 
-   * @param bool $print_debug_messenger_info
-   *   TRUE for printing extra $this->messenger->addStatus() calls for each action
-   *   FALSE otherwise
    *
    * @return int
    *   TRUE on success or FALSE on error
    */
-  public function syncUsersToGroups($print_debug_messenger_info = FALSE): int {
+  public function syncUsersToGroups(): int {
     if (isset($this->endpoint_id) && !empty($this->endpoint_id)) {
         
       $this->endpoint_data = $this->repository->getKey($this->endpoint_id)->getKeyValue();
@@ -189,10 +185,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
 
                           /* Check if the user is already a member, if so, continue with the next student */
                           if ($member = $group->getMember($user_obj)) {
-                            if ($print_debug_messenger_info) {
-                              $this->messenger->addStatus(t("User @username already belongs to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]));
-                            }
-  
+                            $this->messenger->addStatus(t("User @username already belongs to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]));
                             $this->logger->info("User @username already belongs to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
                             continue;
                           } else {
@@ -213,19 +206,13 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
                               'enroll_status' => 1,
                             ));
                             $group_log_event->save();
-  
-                            if ($print_debug_messenger_info) {
-                              $this->messenger->addStatus(t("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]));
-                            }
-  
+
+                            $this->messenger->addStatus(t("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]));
                             $this->logger->notice("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
                           }
                         }
                       } else {
-                        if ($print_debug_messenger_info) {
-                          $this->messenger-addWarning(t("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]));
-                        }
-
+                        $this->messenger-addWarning(t("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]));
                         $this->logger->notice("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]);
                       }
                     } else {
@@ -266,33 +253,22 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
                             ));
                             $group_log_event->save();
 
-                            if ($print_debug_messenger_info) {
-                              $this->messenger->addStatus(t("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]));
-                            }
-
+                            $this->messenger->addStatus(t("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]));
                             $this->logger->notice("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
                           }
                         } else {
-                          if ($print_debug_messenger_info) {
-                            $this->messenger-addWarning(t("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]));
-                          }
-                          
+                          $this->messenger-addWarning(t("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]));
                           $this->logger->notice("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]);
                         }
     
                       } catch (\Exception $e) {
-                        if ($print_debug_messenger_info) {
-                          $this->messenger-addError(t("Error when creating new user: @username", ['@username' => $username_api]));
-                        }
-                        
+                        $this->messenger-addError(t("Error when creating new user: @username", ['@username' => $username_api]));
                         $this->logger->error("Error when creating new user: @username", ['@username' => $username_api]);
                         watchdog_exception('group_lms_user_sync', $e);
                       }
     
                     }
                   }
-
-                  // Get the
                 }
               }
             }
@@ -307,6 +283,8 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
          * for each member, query the API if the student exists in any of these 
          * groups identified by the OU (to implement the endpoint)
          * if not, remove it */
+        $this->removeUnenrolledStudentsFromGroups();
+
       } else {
         // Endpoint URL was not set or is empty
         $this->logger->warning("Failed to set Endpoint URL");
@@ -467,6 +445,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
    */
   private function getAPIGroupIds(): array {
     $group_api_ids = [];
+
     $gids = \Drupal::entityQuery('group')
     ->exists('field_course_ou')
     ->accessCheck(FALSE)
@@ -476,6 +455,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
       foreach ($gids as $gid) {
         $group = Group::load($gid);
         $api_ou = $group->field_course_ou->getValue();
+
         foreach ($api_ou as $ou) {
           $group_api_ids[] = $ou["value"];
         }
@@ -496,18 +476,99 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
   }
 
   /**
-   * Removes members from the group that are not listed in the $classroom array.
-   *
-   * @param array $classroom
-   *   Array of students returned from the LMS API
-   * @param Drupal\group\Entity\Group $group
-   *   The Drupal Group entity representing the classroom
+   * Removes unenrolled students (not listed in the API Groups) from the Drupal Groups
    * 
    * @return int
    *   TRUE on success or FALSE on error
    */
-  private function removeStudentsFromGroup($classroom, $group): bool {
-    if (is_array($classroom)) {
+  private function removeUnenrolledStudentsFromGroups(): bool {
+    // Create an httpClient Object that will be used for all the requests.
+    $client = \Drupal::httpClient();
+
+    $endpoint_data = json_decode($this->endpoint_data);
+    $this->endpoint_url = $endpoint_data->url;
+    $auth = 'Basic '. base64_encode($endpoint_data->username . ':' . $endpoint_data->password);
+
+    /* Loop through the Drupal Groups, for each group, get the members 
+    * Get the Group OUs for each group.
+    * for each member, query the API if the student exists in any of these 
+    * groups identified by the OU (the Drupal Group can have more than more 
+    * OUs stored in the field_course_ou field) if not, remove it */
+    $group_api_ids = [];
+
+    $gids = \Drupal::entityQuery('group')
+    ->exists('field_course_ou')
+    ->accessCheck(FALSE)
+    ->execute();
+
+    if (count($gids) > 0) {
+      foreach ($gids as $gid) {
+        $group = Group::load($gid);
+
+        $api_ou = $group->field_course_ou->getValue();
+
+        // Get the Group OUs of the group
+        foreach ($api_ou as $ou) {
+          $group_api_ids[] = $ou["value"];
+        }
+
+        // Get the group members
+        $group_members = $group->getMembers();
+
+        foreach ($group_members as $membership) {
+          $group_user = $membership->getUser();
+
+          foreach ($group_api_ids as $group_id) {
+            try {
+              $request = $client->get($this->endpoint_url . '/' . $this->api_version . '/' . $group_id . '/' . $group_user->getEmail(), [
+                'http_errors' => TRUE,
+                'query' => [
+                  '_format' => 'json'
+                ],
+                'headers' => [
+                  'Authorization' => $auth,
+                  'Content-Type' => 'application/json',
+                  'Accept' => 'application/json',
+                ],
+              ]);
+
+              if (!empty($request)) {
+                if ($request->getBody()) {
+                  $student_info = json_decode($request->getBody());
+  
+                  if (!is_array($student_info) || (count($student_info) < 1)) {
+                    file_put_contents("/tmp/studentinfo".$group_user->id(), json_encode($student_info));
+                    /* $group->removeMember($group_user);
+                    $group_name = $group->label();
+                    $username = $group_user->getAccountName();
+          
+                    // Logs Group Activity
+                    $group_log_event = GroupLog::create(array(
+                      'name' => $group_name . "-" . $group_name . "-" . $username,
+                      'group_name' => $group_name,
+                      'group_ou' => $group_id,
+                      'username' => $username,
+                      'enroll_status' => 0,
+                    ));
+                    $group_log_event->save();
+          
+                    $this->messenger->addStatus(t("Removed user @username from group @groupname", ['@username' => $username, '@groupname' => $group_id]));
+                    $this->logger->notice("Removed user @username from group @groupname", ['@username' => $username, '@groupname' => $group_id]); */
+                  }
+                }
+              }
+
+
+            } catch (\Exception $e) {
+              watchdog_exception('group_lms_user_sync', $e);
+              return FALSE;
+            }
+          }
+        }
+      }
+    }
+
+    /*if (is_array($classroom)) {
       $group_members = $group->getMembers();
 
       foreach ($group_members as $membership) {
@@ -550,7 +611,9 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
       return TRUE;
     } else {
       return FALSE;
-    }
+    } */
+
+    return TRUE;
   }
 
   /**
