@@ -72,7 +72,7 @@ class GroupLMSRestGetMembership extends ResourceBase {
    * 
    * @return \Drupal\rest\ResourceResponse
    */
-  public function get($version = "v1", $orgUnitId, $username) {
+  public function get($version, $orgUnitId, $username) {
     $path_assets = DRUPAL_ROOT . "/" . \Drupal::service('extension.list.module')->getPath('group_lms_rest_endpoint');
     $jsonContents = [];
 
@@ -84,7 +84,7 @@ class GroupLMSRestGetMembership extends ResourceBase {
 
           foreach ($course_list as $student) {
             // Student is in the course, stop the loop
-            if ($student->Username == $username) {
+            if ($student["Username"] == $username) {
               $user_in_course = TRUE;
               break;
             }
@@ -93,7 +93,7 @@ class GroupLMSRestGetMembership extends ResourceBase {
           if ($user_in_course) {
             $jsonContents = $student;
           } else {
-            $jsonContents = "User is not in the Group";
+            $jsonContents = [];
           }
         }      
       } else {
