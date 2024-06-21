@@ -184,127 +184,129 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
               if ($request->getBody()) {
                 $classroom = json_decode($request->getBody());
 
-                \Drupal::logger('lms_sync')->info('Processed group ID @gid.', [
-                  '@gid' => $group_id,
-                ]);
- 
-                // if (is_array($classroom) && (count($classroom) > 0)) {
-                //   foreach ($classroom as $student) {                
-                //     /* First, check if the user (identified by Email or Username) exists, if not, create the user */
-                //     $user_email_api = $student->Email;
-                //     /* Returns an \Drupal\user\UserInterface object */
-                //     $user_obj = user_load_by_mail($user_email_api);
-                //     $group_id_api = $student->OrgDefinedId;
-                //     $user_id_api = $student->Identifier;
-                //     $username_api = $student->Username;
-                //     /* Check for the RoleID field, should map to the Drupal User Role */
-                //     $group_role_api = $student->RoleId;
-                //     $count_updated_groups = [];
-                //     $language = "en";
-    
-                //     if ($user_obj) {
-                //       /* If it exists, enroll the user into the course identified by OrgDefinedId (OU field from the Group field) */
-                //       $gids = \Drupal::entityQuery('group')
-                //       ->condition('field_course_ou', $group_id_api)
-                //       ->accessCheck(FALSE)
-                //       ->execute();
-    
-                //       if (count($gids) > 0) {
-                //         foreach ($gids as $gid) {
-                //           $group = Group::load($gid);
-    
-                //           if (!$group) {
-                //             $this->logger->error("Failed to load group identified by Group API ID @groupname", ['@groupname' => $group_id_api ]);
-                //             continue;
-                //           }
+                // \Drupal::logger('lms_sync')->info('Processed group ID @gid.', [
+                //   '@gid' => $group_id,
+                // ]);
 
-                //           /* Check if the user is already a member, if so, continue with the next student */
-                //           if ($member = $group->getMember($user_obj)) {
-                //             $this->messenger->addStatus(t("User @username already belongs to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]));
-                //             $this->logger->info("User @username already belongs to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
-                //             continue;
-                //           } else {
-                //             $group->addMember($user_obj);
-                //             $group_relationship = $group->getMember($user_obj)->getGroupRelationship();
-                //             $group_relationship->field_course_ou->value = $group_id_api;
-                //             $group_relationship->save();
-      
-                //             $count_updated_groups[$user_id_api] = $group->id();
-                //             $group_name = $group->label();
+                if (is_array($classroom) && (count($classroom) > 0)) {
+                  foreach ($classroom as $grouping) {
+                    foreach ($grouping as $account) {
+    
+                      /**
+                       * stdClass Object (
+                       * [id] => 84774
+                       * [user_id] => onlin001
+                       * [username] => onlin001
+                       * [display_name] => Guest Account
+                       * [first_name] => Guest
+                       * [last_name] => Account
+                       * [role] => stdClass Object(
+                       *   [id] => 129
+                       * ))
+                       */
+
+                      /* First, check if the user (identified by Email or Username) exists, if not, create the user */
+                      $id = $account->username;
+                      $user_id = $account->user_id;
+                      $username = $account->username;
+                      $display_name = $account->display_name;
+                      $first_name = $account->first_name;
+                      $last_name = $account->last_name;
+                      $role_id = $account->role->id;
+
+                      // \Drupal::logger('lms_sync')->info('Username @uname.', [
+                      //   '@uname' => $role_id,
+                      // ]);
+
+                      /**
+                       * ROLE_ID_ADMINISTRATOR                = 102;
+                       * ROLE_ID_INSTRUCTOR                   = 106;
+                       * ROLE_ID_STUDENT                      = 107;
+                       * ROLE_ID_COURSE_MANAGER               = 110;
+                       * ROLE_ID_CEL_COURSE_EDITOR            = 111;
+                       * ROLE_ID_TA_LEVEL_4                   = 112;
+                       * ROLE_ID_STAFF                        = 113;
+                       * ROLE_ID_TA_LEVEL_1                   = 114;
+                       * ROLE_ID_TA_LEVEL_3                   = 115;
+                       * ROLE_ID_TA_LEVEL_2                   = 117;
+                       * ROLE_ID_FUTURE_STUDENT               = 124;
+                       * ROLE_ID_TA_LEVEL_15                  = 126;
+                       * 
+                       */
+
+                      // Skip any accounts with roles we will ignore.
+                      if ($role_id == '109' || $role_id == '116' || $role_id == '129') {
+                        \Drupal::logger('lms_sync')->info('Skipping Sync due to role: @role_id.', [
+                          '@role_id' => $role_id,
+                        ]);
+                      } else {
+                        $user_obj = user_load_by_name($username);
+                        if ($user_obj) {
+                          // If it exists, enroll the user into the course identified by.
+                          /**
+                           * TODO: Process per Group entity
+                           * Currently this will return all Groups that are
+                           * using the OU value. This might be multiple Groups.
+                           * We need to instead reference the Group entity
+                           * that we got the OU from and process the 
+                           * enrollment per group.
+                           */
+                          $courses = \Drupal::entityQuery('group')
+                          ->condition('field_course_ou', $group_id)
+                          ->accessCheck(FALSE)
+                          ->execute();
   
-                //             // Logs Group Activity
-                //             $group_log_event = GroupLog::create(array(
-                //               'name' => $group_name . "-" . $group_id_api . "-" . $user_obj->getAccountName(),
-                //               'group_name' => $group->label(),
-                //               'group_ou' => $group_id_api,
-                //               'username' => $user_obj->getAccountName(),
-                //               'enroll_status' => 1,
-                //             ));
-                //             $group_log_event->save();
-
-                //             $this->messenger->addStatus(t("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]));
-                //             $this->logger->notice("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
-                //           }
-                //         }
-                //       } else {
-                //         $this->messenger-addWarning(t("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]));
-                //         $this->logger->notice("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]);
-                //       }
-                //     } else {
-                //       try {
-                //         $user_new = $this->createNewUser($username_api, $user_email_api, $language, $group_role_api);
-    
-                //         $gids = \Drupal::entityQuery('group')
-                //         ->condition('field_course_ou', $group_id_api)
-                //         ->accessCheck(FALSE)
-                //         ->execute();
-    
-                //         // Let's add the newly created user in the group
-                //         if (count($gids) > 0) {
-                //           foreach ($gids as $gid) {
-                //             $group = Group::load($gid);
-    
-                //             if (!$group) {
-                //               $this->logger->error("Failed to load group identified by Group API ID @groupname", ['@groupname' => $group_id_api ]);
-                //               continue;
-                //             }
-                            
-                //             /* There is no need to test if the new user is in the group */
-                //             $group->addMember($user_new);
-                //             $group_relationship = $group->getMember($user_new)->getGroupRelationship();
-                //             $group_relationship->field_course_ou->value = $group_id_api;
-                //             $group_relationship->save();
-    
-                //             $count_updated_groups[$user_id_api] = $group->id();
-                //             $group_name = $group->label();
-
-                //             // Logs Group Activity
-                //             $group_log_event = GroupLog::create(array(
-                //               'name' => $group_name . "-" . $group_id_api . "-" . $user_new->getAccountName(),
-                //               'group_name' => $group->label(),
-                //               'group_ou' => $group_id_api,
-                //               'username' => $user_new->getAccountName(),
-                //               'enroll_status' => 1,
-                //             ));
-                //             $group_log_event->save();
-
-                //             $this->messenger->addStatus(t("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]));
-                //             $this->logger->notice("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
-                //           }
-                //         } else {
-                //           $this->messenger-addWarning(t("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]));
-                //           $this->logger->notice("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]);
-                //         }
-    
-                //       } catch (\Exception $e) {
-                //         $this->messenger-addError(t("Error when creating new user: @username", ['@username' => $username_api]));
-                //         $this->logger->error("Error when creating new user: @username", ['@username' => $username_api]);
-                //         watchdog_exception('group_lms_user_sync', $e);
-                //       }
-    
-                //     }
-                //   }
-                // }
+                          if (count($courses) > 0) {
+                            foreach ($courses as $course) {
+                              $group = Group::load($course);
+                              $gid = $group->id();
+                              $group_name = $group->label();
+        
+                              if (!$group) {
+                                $this->logger->error("Failed to load group using OU @ou", ['@ou' => $group_id ]);
+                                continue;
+                              }
+  
+                              /* Check if the user is already a member, if so, continue with the next account */
+  
+                              if ($member = $group->getMember($user_obj)) {
+                                $this->logger->info("User @username already a member of @group_name", [
+                                  '@username' => $username,
+                                  '@group_name' => $group_name
+                                ]);
+                                continue;
+                              } else {
+                                $group->addMember($user_obj);
+                                $group_relationship = $group->getMember($user_obj)->getGroupRelationship();
+                                $group_relationship->field_course_ou->value = $group_id;
+                                $group_relationship->save();
+          
+                                $count_updated_groups[$user_id] = $group->id();
+  
+                                // Logs Group Activity
+                                $group_log_event = GroupLog::create(array(
+                                  'name' => $group_name . "-" . $group_id . "-" . $user_obj->getAccountName(),
+                                  'group_name' => $group_name,
+                                  'group_ou' => $group_id,
+                                  'username' => $user_obj->getAccountName(),
+                                  'enroll_status' => 1,
+                                ));
+                                $group_log_event->save();
+  
+                                $this->logger->notice("Added @username to @groupname", ['@username' => $username, '@groupname' => $group_name]);
+                              }
+                            }
+                          } else {
+                            $this->logger->notice("There is no Drupal group with that Group ID: @gid", ['@gid' => $gid]);
+                          }
+                        } else {
+                          $this->logger->notice("There is no user with that username: @username", ['@username' => $username]);
+                        }
+                      }
+                      
+                    }
+                  }
+                }
               }
             }
           } catch (\Exception $e) {
