@@ -236,7 +236,9 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
 
                       // Skip any accounts with roles we will ignore.
                       if ($role_id == '109' || $role_id == '116' || $role_id == '129') {
-                        \Drupal::logger('lms_sync')->info('Skipping Sync due to role: @role_id.', [
+                        \Drupal::logger('lms_sync')->info('Skipped: Did not sync @user to @group because LMS Role ID: @role_id.', [
+                          '@user' => $username,
+                          '@group' => $group_id,
                           '@role_id' => $role_id,
                         ]);
                       } else {
@@ -268,15 +270,52 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface {
                               }
   
                               /* Check if the user is already a member, if so, continue with the next account */
-  
-                              if ($member = $group->getMember($user_obj)) {
+                              $membership = $group->getMember($user_obj);
+
+                              if ($membership) {
                                 $this->logger->info("User @username already a member of @group_name", [
                                   '@username' => $username,
                                   '@group_name' => $group_name
                                 ]);
                                 continue;
                               } else {
-                                $group->addMember($user_obj);
+                                switch ($role_id) { 
+                                  // CREATOR
+                                  case 110: // ROLE_ID_COURSE_MANAGER
+                                  case 111: // ROLE_ID_CEL_COURSE_EDITOR
+                                    $group->addMember($user_obj, ['group_roles' => ['course_synced-creator']]);
+                                    break;
+
+                                  // EDITOR
+                                  case 112: // ROLE_ID_TA_LEVEL_4
+                                  case 113: // ROLE_ID_STAFF
+                                    $group->addMember($user_obj, ['group_roles' => ['course_synced-content_editor']]);
+                                    break;
+
+                                  // STUDENT
+                                  case 107: //ROLE_ID_STUDENT
+                                    $group->addMember($user_obj);
+                                    break;
+                              
+                                  // VIEW
+                                  case 102: // ROLE_ID_ADMINISTRATOR
+                                  case 106: // ROLE_ID_INSTRUCTOR
+                                  case 114: // ROLE_ID_TA_LEVEL_1
+                                  case 126: // ROLE_ID_TA_LEVEL_15
+                                  case 117: // ROLE_ID_TA_LEVEL_2
+                                  case 115: // ROLE_ID_TA_LEVEL_3
+                                  case 124: // ROLE_ID_FUTURE_STUDENT
+                                    $group->addMember($user_obj, ['group_roles' => ['course_synced-member']]);
+                                    break;
+                                                               
+                                  default:
+                                    $this->logger->error("Unknown Role ID @roleid for @user", [
+                                      '@roleid' => $role_id,
+                                      '@user' => $username
+                                    ]);
+                                    break;
+                                }
+                                
                                 $group_relationship = $group->getMember($user_obj)->getGroupRelationship();
                                 $group_relationship->field_course_ou->value = $group_id;
                                 $group_relationship->save();
