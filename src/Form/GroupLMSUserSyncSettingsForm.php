@@ -32,18 +32,24 @@ class GroupLMSUserSyncSettingsForm extends ConfigFormBase {
 
     $config = $this->config('group_lms_user_sync.settings');
 
-    $form['api_endpoint_info'] = [
+    $form['api_public_key'] = [
       '#type' => 'key_select',
-      '#title' => $this->t('Secret key'),
-      '#default_value' => $config->get('api_endpoint_info'),
+      '#title' => $this->t('Public key'),
+      '#default_value' => $config->get('api_public_key'),
     ];
 
-    $form['api_endpoint_version'] = [
+    $form['api_private_key'] = [
+      '#type' => 'key_select',
+      '#title' => $this->t('Private key'),
+      '#default_value' => $config->get('api_private_key'),
+    ];
+
+    $form['api_base_url'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('API Version'),
-      '#default_value' => $config->get('api_endpoint_version'),
-      '#size' => 30,
-      '#description' => $this->t('Endpoint API Version: v1 or v2'),
+      '#title' => $this->t('Endpoint Base URL'),
+      '#default_value' => $config->get('api_base_url'),
+      '#size' => 255,
+      '#description' => $this->t('The URL to the endpoint'),
     ];
 
     return $form;
@@ -54,19 +60,25 @@ class GroupLMSUserSyncSettingsForm extends ConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $config = $this->config('group_lms_user_sync.settings');
-    $conf_api_endpoint_info = $config->get('api_endpoint_info');
-    $form_api_endpoint_info = $form_state->getValue('api_endpoint_info');
-    $conf_api_endpoint_version = $config->get('api_endpoint_version');
-    $form_api_endpoint_version = $form_state->getValue('api_endpoint_version');
+    $conf_api_public_key = $config->get('api_public_key');
+    $form_api_public_key = $form_state->getValue('api_public_key');
+    $conf_api_private_key = $config->get('api_private_key');
+    $form_api_private_key = $form_state->getValue('api_private_key');
+    $conf_api_base_url = $config->get('api_base_url');
+    $form_api_base_url = $form_state->getValue('api_base_url');
 
-    // Only rebuild the routes if the api_endpoint_info switch has changed.
-    if ($conf_api_endpoint_info != $form_api_endpoint_info) {
-      $config->set('api_endpoint_info', $form_api_endpoint_info)->save();
-      \Drupal::service('router.builder')->setRebuildNeeded();
+    if ($conf_api_private_key != $form_api_private_key) {
+      $config->set('api_private_key', $form_api_private_key)->save();
     }
 
-    if ($conf_api_endpoint_version != $form_api_endpoint_version) {
-      $config->set('api_endpoint_version', $form_api_endpoint_version)->save();
+    if ($conf_api_public_key != $form_api_public_key) {
+      $config->set('api_public_key', $form_api_public_key)->save();
+    }
+
+    // Only rebuild the routes if the api_endpoint_info switch has changed.
+    if ($conf_api_base_url != $form_api_base_url) {
+      $config->set('api_base_url', $form_api_base_url)->save();
+      \Drupal::service('router.builder')->setRebuildNeeded();
     }
 
     parent::submitForm($form, $form_state);
