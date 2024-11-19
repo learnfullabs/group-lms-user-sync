@@ -230,7 +230,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
                           $last_name = $account->last_name;
                           $role_id = $account->role->id;
 
-                          // \Drupal::logger('lms_sync')->info('Username @uname.', [
+                          // \Drupal::logger('group_lms_user_sync')->info('Username @uname.', [
                           //   '@uname' => $role_id,
                           // ]);
 
@@ -252,7 +252,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
 
                           // Skip any accounts with roles we will ignore.
                           if ($role_id == '109' || $role_id == '116' || $role_id == '129') {
-                            \Drupal::logger('lms_sync')->info('Skipped: Did not sync @user from @ou to @groupname (@groupid) because LMS Role ID: @role_id.', [
+                            \Drupal::logger('group_lms_user_sync')->info('Skipped: Did not sync @user from @ou to @groupname (@groupid) because LMS Role ID: @role_id.', [
                               '@user' => $username,
                               '@ou' => $ou,
                               '@groupname' => $group_name,
@@ -288,147 +288,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
     return TRUE;
   }
 
-  /**
-   * Sync users/class groups from JSON Field to Drupal Groups.
-   * 
-   * @param string $jsonContent
-   *   The JSON Snippet that will be processed.
-   *
-   * @return int
-   *   TRUE on success or FALSE on error
-   */
-  public function syncFromTextField($jsonContent): int
-  {
-    $classList = json_decode($jsonContent);
-
-    if (!$classList) {
-      $this->messenger->addError(t("Error when trying to decode the JSON data, please check."));
-      return FALSE;
-    }
-
-    foreach ($classList as $student) {
-      /* First, check if the user (identified by Email or Username) exists, if not, create the user */
-      $user_email_api = $student->Email;
-      /* Returns an \Drupal\user\UserInterface object */
-      $user_obj = user_load_by_mail($user_email_api);
-      $group_id_api = $student->OrgDefinedId;
-      $user_id_api = $student->Identifier;
-      $username_api = $student->Username;
-
-      /* Check for the RoleID field, should map to the Drupal User Role */
-      $group_role_api = $student->RoleId;
-      $count_updated_groups = [];
-
-      if ($user_obj) {
-        /* If it exists, enroll the user into the course identified by OrgDefinedId (OU field from the Group field) */
-        $gids = \Drupal::entityQuery('group')
-          ->condition('field_course_ou', $group_id_api)
-          ->accessCheck(FALSE)
-          ->execute();
-
-        if (count($gids) > 0) {
-          foreach ($gids as $gid) {
-            $group = Group::load($gid);
-
-            if (!$group) {
-              $this->logger->error("Failed to load group identified by Group API ID @groupname", ['@groupname' => $group_id_api]);
-              continue;
-            }
-
-            /* Check if the user is already a member, if so, continue with the next student */
-            if ($member = $group->getMember($user_obj)) {
-              $this->messenger->addWarning(t("User @username already belongs to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]));
-              $this->logger->warning("User @username already belongs to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
-              continue;
-            } else {
-              $group->addMember($user_obj);
-              $group_relationship = $group->getMember($user_obj)->getGroupRelationship();
-              $group_relationship->field_course_ou->value = $group_id_api;
-              $group_relationship->save();
-
-              $count_updated_groups[$user_id_api] = $group->id();
-              $group_name = $group->label();
-
-              // Logs Group Activity
-              $group_log_event = GroupLog::create(
-                array(
-                  'name' => $group_name . "-" . $group_id_api . "-" . $user_obj->getAccountName(),
-                  'group_name' => $group_name,
-                  'group_ou' => $group_id_api,
-                  'username' => $user_obj->getAccountName(),
-                  'enroll_status' => 1,
-                )
-              );
-              $group_log_event->save();
-
-              $this->messenger->addStatus(t("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]));
-              $this->logger->notice("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
-            }
-          }
-        } else {
-          $this->messenger->addWarning(t("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]));
-          $this->logger->notice("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]);
-        }
-      } else {
-        try {
-          $user_new = $this->createNewUser($username_api, $user_email_api, $language, $group_role_api);
-
-          $gids = \Drupal::entityQuery('group')
-            ->condition('field_course_ou', $group_id_api)
-            ->accessCheck(FALSE)
-            ->execute();
-
-          // Let's add the newly created user in the group
-          if (count($gids) > 0) {
-            foreach ($gids as $gid) {
-              $group = Group::load($gid);
-
-              if (!$group) {
-                $this->messenger->addError(t("Failed to load group identified by Group API ID @groupname", ['@groupname' => $group_id_api]));
-                $this->logger->error("Failed to load group identified by Group API ID @groupname", ['@groupname' => $group_id_api]);
-                continue;
-              }
-
-              /* There is no need to test if the new user is in the group */
-              $group->addMember($user_new);
-              $group_relationship = $group->getMember($user_new)->getGroupRelationship();
-              $group_relationship->field_course_ou->value = $group_id_api;
-              $group_relationship->save();
-
-              $count_updated_groups[$user_id_api] = $group->id();
-              $group_name = $group->label();
-
-              // Logs Group Activity
-              $group_log_event = GroupLog::create(
-                array(
-                  'name' => $group_name . "-" . $group_id_api . "-" . $user_new->getAccountName(),
-                  'group_name' => $group_name,
-                  'group_ou' => $group_id_api,
-                  'username' => $user_new->getAccountName(),
-                  'enroll_status' => 1,
-                )
-              );
-              $group_log_event->save();
-
-              $this->messenger->addStatus(t("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]));
-              $this->logger->notice("Added user @username to group @groupname", ['@username' => $username_api, '@groupname' => $group_id_api]);
-            }
-          } else {
-            $this->messenger->addWarning(t("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]));
-            $this->logger->notice("There is no Drupal group with that Group API ID: @groupname", ['@groupname' => $group_id_api]);
-          }
-
-        } catch (\Exception $e) {
-          $this->messenger - addError(t("Error when creating new user: @username", ['@username' => $username_api]));
-          $this->logger->error("Error when creating new user: @username", ['@username' => $username_api]);
-          watchdog_exception('group_lms_user_sync', $e);
-        }
-
-      }
-    }
-
-    return TRUE;
-  }
+  
 
   /**
    * Return a list of all the OUs used by a Group stored in Drupal 
