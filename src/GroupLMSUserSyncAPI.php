@@ -204,16 +204,13 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
                 if (!empty($request)) {
                   if ($request->getBody()) {
 
-                    
-
                     $classList = json_decode($request->getBody());
-
-                   // print for debug
-                   $this->logger->debug('<pre><code>' . print_r($classList, true) . '</code></pre>');
+                    // print for debug
+                    $this->logger->debug('<pre><code>' . print_r($classList, true) . '</code></pre>');
 
                     if (is_array($classList) && (count($classList) > 0)) {
 
-                      
+
 
                       $this->unEnrollUser($group_id, $classList, $ou);
                       foreach ($classList as $grouping) {
@@ -239,6 +236,10 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
                           $first_name = $account->first_name;
                           $last_name = $account->last_name;
                           $role_id = $account->role->id;
+
+                          
+
+
 
                           // \Drupal::logger('group_lms_user_sync')->info('Username @uname.', [
                           //   '@uname' => $role_id,
@@ -270,6 +271,13 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
                               '@role_id' => $role_id,
                             ]);
                           } else {
+
+                            $user_object = user_load_by_name($username);
+                            if (!$user_object) {
+                              $user_email = $username . '@uwaterloo.ca';
+                              $this->createNewUser($username, $user_email, $role_id);
+                            }
+
                             $this->enrollUser($group_id, $username, $role_id, $ou);
                           } // end if role
                         } // end $account loop
@@ -414,106 +422,104 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
     } else {
       $user_obj = user_load_by_name($username);
 
-      if ($user_obj) {
-        // If User exists in Drupal, process their Group membership.
+      // if (!$user_obj) {
+      //   // if User does not exist in Drupal, create the user account first.
+      //   $this->logger->debug('Role ID: <pre><code>' . print_r($role_id, true) . '</code></pre>');
+      //   $user_email = $username . '@uwaterloo.ca';
+      //   $this->createNewUser($username, $user_email, $role_id);
+      // }
+      // If User exists in Drupal, process their Group membership.
 
-        /* Check if the user is already a Group Member, if so, continue with the next account */
-        $membership = $group->getMember($user_obj);
+      /* Check if the user is already a Group Member, if so, continue with the next account */
+      $membership = $group->getMember($user_obj);
 
-        if ($membership) {
-          /**
-           * ToDo:
-           * 1. Check Group Role against LMS Role.
-           * 2. Sync to LMS Role if needed.
-           */
-          $this->logger->info("User @username already a member of @group_name", [
-            '@username' => $username,
-            '@group_name' => $group_name
-          ]);
-
-
-          /////////
-          ///////////////////////
-          ////////////////////////
-          /////////////////////
-          ////////////////////// start back here
-
-          $roles = $membership->getRoles();
-          foreach ($roles as $role) {
-            $this->logger->debug('<pre><code>' . print_r($role->label(), true) . '</code></pre>');
-          }
-
-          // pass LMS role snd Group role to syncRole()
-          $this->syncRole($username, $role_id, $roles);
-
-
-        } else {
-          switch ($role_id) {
-            // CREATOR
-            case 110: // ROLE_ID_COURSE_MANAGER
-            case 111: // ROLE_ID_CEL_COURSE_EDITOR
-              $group->addMember($user_obj, ['group_roles' => ['course_synced-creator']]);
-              break;
-
-            // EDITOR
-            case 112: // ROLE_ID_TA_LEVEL_4
-            case 113: // ROLE_ID_STAFF
-              $group->addMember($user_obj, ['group_roles' => ['course_synced-content_editor']]);
-              break;
-
-            // STUDENT
-            case 107: //ROLE_ID_STUDENT
-              $group->addMember($user_obj);
-              break;
-
-            // VIEW
-            case 102: // ROLE_ID_ADMINISTRATOR
-            case 106: // ROLE_ID_INSTRUCTOR
-            case 114: // ROLE_ID_TA_LEVEL_1
-            case 126: // ROLE_ID_TA_LEVEL_15
-            case 117: // ROLE_ID_TA_LEVEL_2
-            case 115: // ROLE_ID_TA_LEVEL_3
-            case 124: // ROLE_ID_FUTURE_STUDENT
-              $group->addMember($user_obj, ['group_roles' => ['course_synced-member']]);
-              break;
-
-            default:
-              $this->logger->error("Unknown Role ID @roleid for @user", [
-                '@roleid' => $role_id,
-                '@user' => $username
-              ]);
-              break;
-          } //end switch
-
-          $group_relationship = $group->getMember($user_obj)->getGroupRelationship();
-          $group_relationship->field_course_ou->value = $ou;
-          $group_relationship->save();
-
-
-
-          // Logs Group Activity
-          $group_log_event = GroupLog::create(
-            array(
-              'name' => $group_name . "-" . $group_id . "-" . $user_obj->getAccountName(),
-              'group_name' => $group_name,
-              'group_ou' => $ou,
-              'username' => $user_obj->getAccountName(),
-              'enroll_status' => 1,
-            )
-          );
-          $group_log_event->save();
-
-          $this->logger->notice("Added @username to @groupname", ['@username' => $username, '@groupname' => $group_name]);
-
-        } // end if membership
-
-      } else {
-        // if User does not exist in Drupal, create the user account first.
-
+      if ($membership) {
         /**
          * ToDo:
-         * If Drupal User account doesn't exist, create account first then enroll them in Group.
+         * 1. Check Group Role against LMS Role.
+         * 2. Sync to LMS Role if needed.
          */
+        $this->logger->info("User @username already a member of @group_name", [
+          '@username' => $username,
+          '@group_name' => $group_name
+        ]);
+
+
+        /////////
+        ///////////////////////
+        ////////////////////////
+        /////////////////////
+        ////////////////////// start back here
+
+        $roles = $membership->getRoles();
+        foreach ($roles as $role) {
+          $this->logger->debug('<pre><code>' . print_r($role->label(), true) . '</code></pre>');
+        }
+
+        // pass LMS role snd Group role to syncRole()
+        $this->syncRole($username, $role_id, $roles);
+
+
+      } else {
+        switch ($role_id) {
+          // CREATOR
+          case 110: // ROLE_ID_COURSE_MANAGER
+          case 111: // ROLE_ID_CEL_COURSE_EDITOR
+            $group->addMember($user_obj, ['group_roles' => ['course_synced-creator']]);
+            break;
+
+          // EDITOR
+          case 112: // ROLE_ID_TA_LEVEL_4
+          case 113: // ROLE_ID_STAFF
+            $group->addMember($user_obj, ['group_roles' => ['course_synced-content_editor']]);
+            break;
+
+          // STUDENT
+          case 107: //ROLE_ID_STUDENT
+            $group->addMember($user_obj);
+            break;
+
+          // VIEW
+          case 102: // ROLE_ID_ADMINISTRATOR
+          case 106: // ROLE_ID_INSTRUCTOR
+          case 114: // ROLE_ID_TA_LEVEL_1
+          case 126: // ROLE_ID_TA_LEVEL_15
+          case 117: // ROLE_ID_TA_LEVEL_2
+          case 115: // ROLE_ID_TA_LEVEL_3
+          case 124: // ROLE_ID_FUTURE_STUDENT
+            $group->addMember($user_obj, ['group_roles' => ['course_synced-member']]);
+            break;
+
+          default:
+            $this->logger->error("Unknown Role ID @roleid for @user", [
+              '@roleid' => $role_id,
+              '@user' => $username
+            ]);
+            break;
+        } //end switch
+
+        $group_relationship = $group->getMember($user_obj)->getGroupRelationship();
+        $group_relationship->field_course_ou->value = $ou;
+        $group_relationship->save();
+
+
+
+        // Logs Group Activity
+        $group_log_event = GroupLog::create(
+          array(
+            'name' => $group_name . "-" . $group_id . "-" . $user_obj->getAccountName(),
+            'group_name' => $group_name,
+            'group_ou' => $ou,
+            'username' => $user_obj->getAccountName(),
+            'enroll_status' => 1,
+          )
+        );
+        $group_log_event->save();
+
+        $this->logger->notice("Added @username to @groupname", ['@username' => $username, '@groupname' => $group_name]);
+
+
+
       }
     }
   }
@@ -624,7 +630,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
    * @return int
    *   Drupal\user\Entity\User on success or FALSE on error
    */
-  private function createNewUser($username_api, $user_email_api, $language, $group_api_role_id)
+  private function createNewUser($username_api, $user_email_api, $group_api_role_id)
   {
     /* User doesn't exist, create it for now */
     $user_new = User::create();
@@ -649,10 +655,10 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
     $res = $user_new->save();
 
     if (!$res) {
-      $this->messenger->addError(t("Failed to register user @username", ['@username' => $username_api]));
       $this->logger->error("Failed to register user @username", ['@username' => $username_api]);
       return FALSE;
     } else {
+      
       return $user_new;
     }
   }
@@ -672,13 +678,29 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
     // NOTE: "student" role must be created in the Drupal site for now.
     $drupal_role_id = "";
 
+    //$this->logger->debug('<pre><code>' . print_r($group_api_role_id, true) . '</code></pre>');
+
+
     switch ($group_api_role_id) {
-      case 3:
+      case 107: // ROLE_ID_STUDENT
+      case 114: // ROLE_ID_TA_LEVEL_1
+      case 126: // ROLE_ID_TA_LEVEL_15
+      case 117: // ROLE_ID_TA_LEVEL_2
+      case 115: // ROLE_ID_TA_LEVEL_3
+      case 112: // ROLE_ID_TA_LEVEL_4
+      case 124: // ROLE_ID_FUTURE_STUDENT
         $drupal_role_id = "student";
         break;
 
-      case 6:
-        $drupal_role_id = "student";
+      case 110: // ROLE_ID_COURSE_MANAGER
+      case 111: // ROLE_ID_CEL_COURSE_EDITOR
+      case 102: // ROLE_ID_ADMINISTRATOR
+      case 113: // ROLE_ID_STAFF
+        $drupal_role_id = "cel_staff";
+        break;
+
+      case 106: // ROLE_ID_INSTRUCTOR
+        $drupal_role_id = "faculty";
         break;
 
       default:
