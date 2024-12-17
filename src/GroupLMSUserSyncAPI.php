@@ -170,6 +170,8 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
         // Get a list of all the Groups in Drupal
 
         $group_ids = $this->getGroupIds();
+        $this->logger->debug('<pre><code>' . print_r($group_ids, true) . '</code></pre>');
+
         //$group_ids = $this->getAPIGroupIds();        
 
         /* Loop through all the Group OUs, make an API call for each Group OU
@@ -180,6 +182,8 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
           // Get Group metadata.
           $group = Group::load($group_id);
           $group_name = $group->label();
+
+          $this->logger->debug('Syncing Group:: @group_name', ['@group_name' => $group_name]);
 
           // Get all OUs used in Group, if any.
           $group_ous = $this->getGroupOus($group_id);
