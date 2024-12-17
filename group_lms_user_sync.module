@@ -5,28 +5,38 @@
  * Allows you to group users, content and other entities.
  */
 
-use Drupal\Component\Utility\Html;
-use Drupal\Core\Session\AccountInterface;
-use Drupal\group\Entity\GroupRelationshipInterface;
-use Drupal\group\Entity\GroupInterface;
-use Drupal\Core\State\StateInterface;
-use Drupal\Core\Datetime\DrupalDateTime;
-use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+// use Drupal\Component\Utility\Html;
+// use Drupal\Core\Session\AccountInterface;
+// use Drupal\group\Entity\GroupRelationshipInterface;
+// use Drupal\group\Entity\GroupInterface;
+// use Drupal\Core\State\StateInterface;
+// use Drupal\Core\Datetime\DrupalDateTime;
+// use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+
+use Drupal\Core\Queue\QueueFactory;
+use Drupal\Core\Queue\QueueInterface;
 
 /**
  * Implements hook_cron().
  */
 function group_lms_user_sync_cron() {
+  \Drupal::service('group_lms_user_sync.api')->syncUsersToGroups();
 }
 
 /**
  * Implements hook_cron_queue_info().
  */
 function group_lms_user_sync_cron_queue_info() {
+  $queues['group_lms_user_sync_queue'] = [
+    'worker callback' => 'group_lms_user_sync_process_item',
+    'time' => 60,
+  ];
+  return $queues;
 }
 
 /**
  * Worker callback for the daily task.
  */
-function group_lms_user_sync_daily_task_worker($data) {
+function group_lms_user_sync_process_item($item) {
+  \Drupal::service('group_lms_user_sync.api')->syncUsersToGroups($item);
 }
