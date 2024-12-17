@@ -203,9 +203,19 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
 
                 if (!empty($request)) {
                   if ($request->getBody()) {
+
+                    
+
                     $classList = json_decode($request->getBody());
 
+                   // print for debug
+                   $this->logger->debug('<pre><code>' . print_r($classList, true) . '</code></pre>');
+
                     if (is_array($classList) && (count($classList) > 0)) {
+
+                      
+
+                      $this->unEnrollUser($group_id, $classList, $ou);
                       foreach ($classList as $grouping) {
                         foreach ($grouping as $account) {
                           /**
@@ -288,7 +298,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
     return TRUE;
   }
 
-  
+
 
   /**
    * Return a list of all the OUs used by a Group stored in Drupal 
@@ -317,6 +327,8 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
 
   /**
    * Return a list of all the Group IDs.
+   * Returns the Group ID for published groups
+   * sorted by last modified.
    * 
    * @return array
    *   Array of Group IDs or an empty array if empty
@@ -389,8 +401,9 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
    * The OU to sync with.
    * 
    */
-  public function enrollUser($group_id, $username, $role_id, $ou) {
-    
+  public function enrollUser($group_id, $username, $role_id, $ou)
+  {
+
     // Get Group
     $group = Group::load($group_id);
     $group_name = $group->label();
@@ -403,7 +416,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
 
       if ($user_obj) {
         // If User exists in Drupal, process their Group membership.
-        
+
         /* Check if the user is already a Group Member, if so, continue with the next account */
         $membership = $group->getMember($user_obj);
 
@@ -432,7 +445,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
 
           // pass LMS role snd Group role to syncRole()
           $this->syncRole($username, $role_id, $roles);
-          
+
 
         } else {
           switch ($role_id) {
@@ -476,7 +489,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
           $group_relationship->field_course_ou->value = $ou;
           $group_relationship->save();
 
-          
+
 
           // Logs Group Activity
           $group_log_event = GroupLog::create(
@@ -493,7 +506,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
           $this->logger->notice("Added @username to @groupname", ['@username' => $username, '@groupname' => $group_name]);
 
         } // end if membership
-  
+
       } else {
         // if User does not exist in Drupal, create the user account first.
 
@@ -502,10 +515,84 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
          * If Drupal User account doesn't exist, create account first then enroll them in Group.
          */
       }
-    }    
+    }
   }
 
-  public function syncRole($username, $role_id, $group_role) {
+  /**
+   * Unenroll members from a Group if they are no longer in the LMS group.
+   *
+   * @param int $group_id
+   *    The id for the group entity.
+   * @param array $roster
+   *    An array of LMS user IDs who should remain in the group.
+   * @param string $ou
+   *    The LEARN OU value.
+   */
+  public function unEnrollUser($group_id, array $roster, $ou)
+  {
+
+    // Get Group
+    $group = Group::load($group_id);
+    $group_name = $group->label();
+
+    // Get all current group members.
+    $current_members = $group->getMembers();
+    $members_of_roster = [];
+
+    foreach ($roster as $grouping) {
+      foreach ($grouping as $member) {
+        $members_of_roster[] = [
+          'user_id' => $member->user_id,
+          'username' => $member->username,
+        ];
+      }
+    }
+
+    // the column to search for
+    $search_column = array_column($members_of_roster, 'username');
+
+    // iterate through each group member to find user who
+    // is not matching the roster from the OU.
+    foreach ($current_members as $member) {
+      $user = $member->getUser();
+      $username = $user->getAccountName();
+      $group_member_relationship = $group->getMember($user)->getGroupRelationship();
+      $group_member_ou_field = $group_member_relationship->field_course_ou->value;
+
+      if ($group_member_ou_field === $ou) {
+        if (!in_array($username, $search_column)) {
+
+          // Remove user as member from group
+          $group->removeMember($user);
+
+          // Log to Drupal Logs
+          \Drupal::logger('group_lms_user_sync')->info('UnEnroll Action: Removing @user (OU: @ou) from  @groupname (@groupid).', [
+            '@user' => $username,
+            '@ou' => $ou,
+            '@groupname' => $group_name,
+            '@groupid' => $group_id,
+          ]);
+
+          // Logs Group Activity
+          $group_log_event = GroupLog::create(
+            array(
+              'name' => $group_name . "-" . $group_id . "-" . $username,
+              'group_name' => $group_name,
+              'group_ou' => $ou,
+              'username' => $username,
+              'enroll_status' => 0,
+            )
+          );
+          $group_log_event->save();
+        }
+        ;
+      }
+    }
+  }
+
+
+  public function syncRole($username, $role_id, $group_role)
+  {
     // check if $group_role is correct based on $role_id.
 
     // if mismatched, change user's group role.
