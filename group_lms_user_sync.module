@@ -17,6 +17,14 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
  * Implements hook_cron().
  */
 function group_lms_user_sync_cron() {
+    // Get the GroupLMSUserSyncAPI service.
+    $sync_service = \Drupal::service('group_lms_user_sync.api');
+
+    // Run the syncUsersToGroups method.
+    $result = $sync_service->syncUsersToGroups();
+  
+    // Log the result.
+    \Drupal::logger('group_lms_user_sync')->info('Cron executed syncUsersToGroups. Result: @result', ['@result' => $result]);
 }
 
 /**
