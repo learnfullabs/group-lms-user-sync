@@ -170,7 +170,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
         // Get a list of all the Groups in Drupal
 
         $group_ids = $this->getGroupIds();
-        $this->logger->debug('<pre><code>' . print_r($group_ids, true) . '</code></pre>');
+        //$this->logger->debug('<pre><code>' . print_r($group_ids, true) . '</code></pre>');
 
         //$group_ids = $this->getAPIGroupIds();        
 
@@ -210,7 +210,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
 
                     $classList = json_decode($request->getBody());
                     // print for debug
-                    $this->logger->debug('<pre><code>' . print_r($classList, true) . '</code></pre>');
+                    //$this->logger->debug('<pre><code>' . print_r($classList, true) . '</code></pre>');
 
                     if (is_array($classList) && (count($classList) > 0)) {
 
