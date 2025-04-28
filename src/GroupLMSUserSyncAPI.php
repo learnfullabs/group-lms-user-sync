@@ -2,6 +2,7 @@
 
 namespace Drupal\group_lms_user_sync;
 
+use Consolidation\Log\Logger;
 use Drupal\user\Entity\User;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\key\KeyRepositoryInterface;
@@ -163,16 +164,10 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
 
         $request_url = $this->endpoint_url . $this->endpoint_publickey . '/hash/' . $this->endpoint_hashed_privatekey . '/format/json/unit_id/';
 
-        //$endpoint_data = json_decode($request_url);
-        //$this->endpoint_url = $endpoint_data->url;
-        //$auth = 'Basic '. base64_encode($endpoint_data->username . ':' . $endpoint_data->password);
 
         // Get a list of all the Groups in Drupal
-
         $group_ids = $this->getGroupIds();
-        //$this->logger->debug('<pre><code>' . print_r($group_ids, true) . '</code></pre>');
-
-        //$group_ids = $this->getAPIGroupIds();        
+    
 
         /* Loop through all the Group OUs, make an API call for each Group OU
          * add new members if any, don't add members to the Group if they are
@@ -187,6 +182,9 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
 
           // Get all OUs used in Group, if any.
           $group_ous = $this->getGroupOus($group_id);
+
+          // Unenroll members whose OU values are no longer in the group's OU list.
+          $this->unenrollMembersWithInvalidOUs($group_id, $group_ous, $group_name);
 
           if (is_array($group_ous) && (count($group_ous) > 0)) {
 
@@ -267,13 +265,13 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
 
                           // Skip any accounts with roles we will ignore.
                           if ($role_id == '109' || $role_id == '116' || $role_id == '129') {
-                            \Drupal::logger('group_lms_user_sync')->info('Skipped: Did not sync @user from @ou to @groupname (@groupid) because LMS Role ID: @role_id.', [
-                              '@user' => $username,
-                              '@ou' => $ou,
-                              '@groupname' => $group_name,
-                              '@groupid' => $group_id,
-                              '@role_id' => $role_id,
-                            ]);
+                            // \Drupal::logger('group_lms_user_sync')->info('Skipped: Did not sync @user from @ou to @groupname (@groupid) because LMS Role ID: @role_id.', [
+                            //   '@user' => $username,
+                            //   '@ou' => $ou,
+                            //   '@groupname' => $group_name,
+                            //   '@groupid' => $group_id,
+                            //   '@role_id' => $role_id,
+                            // ]);
                           } else {
 
                             $user_object = user_load_by_name($username);
@@ -310,7 +308,56 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
     return TRUE;
   }
 
+/**
+ * Unenroll members whose OU values are no longer in the group's OU list.
+ *
+ * @param int $group_id
+ *   The group ID.
+ * @param array $valid_ous
+ *   The list of valid OU values for the group.
+ * @param string $group_name
+ *   The name of the group.
+ */
+  private function unenrollMembersWithInvalidOUs(int $group_id, array $valid_ous, string $group_name): void
+  {
 
+    $group = Group::load($group_id);
+    if (!$group) {
+      $this->logger->error("Failed to load group with ID @group_id", ['@group_id' => $group_id]);
+      return;
+    }
+
+    $current_members = $group->getMembers();
+
+    foreach ($current_members as $member) {
+      $user = $member->getUser();
+      $membership = $group->getMember($user);
+
+      if ($membership) {
+        $ou_value = $membership->getGroupRelationship()->field_course_ou->value;
+
+        // Skip members with an empty OU value
+        if (empty($ou_value)) {
+          continue;
+        }
+
+        // If group_ous is empty, remove all members with any OU value
+        if (empty($valid_ous) || !in_array($ou_value, $valid_ous)) {
+          $group->removeMember($user);
+
+          // Log group activity.
+          $group_log_event = GroupLog::create([
+            'name' => $group_name . "-" . $group_id . "-" . $user->getAccountName(),
+            'group_name' => $group_name,
+            'group_ou' => $ou_value,
+            'username' => $user->getAccountName(),
+            'enroll_status' => 0,
+          ]);
+          $group_log_event->save();
+        }
+      }
+    }
+  }
 
   /**
    * Return a list of all the OUs used by a Group stored in Drupal 
@@ -350,9 +397,10 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
     $group_ids = [];
 
     $gids = \Drupal::entityQuery('group')
-      ->exists('field_course_ou')
       ->accessCheck(FALSE)
       ->condition('status', 1)
+      ->condition('type', 'course_synced')
+      ->condition('field_enable_lms_cms_sync', 1)
       ->sort('changed', 'DESC')
       ->execute();
 
@@ -443,10 +491,10 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
          * 1. Check Group Role against LMS Role.
          * 2. Sync to LMS Role if needed.
          */
-        $this->logger->info("User @username already a member of @group_name", [
-          '@username' => $username,
-          '@group_name' => $group_name
-        ]);
+        // $this->logger->info("User @username already a member of @group_name", [
+        //   '@username' => $username,
+        //   '@group_name' => $group_name
+        // ]);
 
 
         /////////
@@ -456,9 +504,9 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
         ////////////////////// start back here
 
         $roles = $membership->getRoles();
-        foreach ($roles as $role) {
-          $this->logger->debug('<pre><code>' . print_r($role->label(), true) . '</code></pre>');
-        }
+        // foreach ($roles as $role) {
+        //   $this->logger->debug('<pre><code>' . print_r($role->label(), true) . '</code></pre>');
+        // }
 
         // pass LMS role snd Group role to syncRole()
         $this->syncRole($username, $role_id, $roles);
@@ -520,7 +568,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
         );
         $group_log_event->save();
 
-        $this->logger->notice("Added @username to @groupname", ['@username' => $username, '@groupname' => $group_name]);
+        //$this->logger->notice("Added @username to @groupname", ['@username' => $username, '@groupname' => $group_name]);
 
 
 
@@ -575,13 +623,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
           // Remove user as member from group
           $group->removeMember($user);
 
-          // Log to Drupal Logs
-          \Drupal::logger('group_lms_user_sync')->info('UnEnroll Action: Removing @user (OU: @ou) from  @groupname (@groupid).', [
-            '@user' => $username,
-            '@ou' => $ou,
-            '@groupname' => $group_name,
-            '@groupid' => $group_id,
-          ]);
+          
 
           // Logs Group Activity
           $group_log_event = GroupLog::create(
