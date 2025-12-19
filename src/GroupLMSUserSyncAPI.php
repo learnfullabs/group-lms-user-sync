@@ -193,107 +193,91 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
                * Loop through all OUs for a Group, make the API call for each OU
                * value.
                * */
-              try {
-                $request = $client->get($request_url . $ou . '/', [
-                  'http_errors' => TRUE,
-                  'verify' => FALSE,
-                  'headers' => [
-                    'Content-Type' => 'application/json',
-                    'Accept' => 'application/json',
-                  ],
-                ]);
+              $classList = $this->fetchClassListWithRetry($client, $request_url . $ou . '/');
 
-                if (!empty($request)) {
-                  if ($request->getBody()) {
-
-                    $classList = json_decode($request->getBody());
-                    // print for debug
-                    //$this->logger->debug('<pre><code>' . print_r($classList, true) . '</code></pre>');
-
-                    if (is_array($classList) && (count($classList) > 0)) {
-
-
-
-                      $this->unEnrollUser($group_id, $classList, $ou);
-                      foreach ($classList as $grouping) {
-                        foreach ($grouping as $account) {
-                          /**
-                           * stdClass Object (
-                           * [id] => 84774
-                           * [user_id] => onlin001
-                           * [username] => onlin001
-                           * [display_name] => Guest Account
-                           * [first_name] => Guest
-                           * [last_name] => Account
-                           * [role] => stdClass Object(
-                           *   [id] => 129
-                           * ))
-                           */
-
-                          /* First, check if the user (identified by Email or Username) exists, if not, create the user */
-                          $id = $account->username;
-                          $user_id = $account->user_id;
-                          $username = $account->username;
-                          $display_name = $account->display_name;
-                          $first_name = $account->first_name;
-                          $last_name = $account->last_name;
-                          $role_id = $account->role->id;
-
-                          
-
-
-
-                          // \Drupal::logger('group_lms_user_sync')->info('Username @uname.', [
-                          //   '@uname' => $role_id,
-                          // ]);
-
-                          /**
-                           * ROLE_ID_ADMINISTRATOR                = 102;
-                           * ROLE_ID_INSTRUCTOR                   = 106;
-                           * ROLE_ID_STUDENT                      = 107;
-                           * ROLE_ID_COURSE_MANAGER               = 110;
-                           * ROLE_ID_CEL_COURSE_EDITOR            = 111;
-                           * ROLE_ID_TA_LEVEL_4                   = 112;
-                           * ROLE_ID_STAFF                        = 113;
-                           * ROLE_ID_TA_LEVEL_1                   = 114;
-                           * ROLE_ID_TA_LEVEL_3                   = 115;
-                           * ROLE_ID_TA_LEVEL_2                   = 117;
-                           * ROLE_ID_FUTURE_STUDENT               = 124;
-                           * ROLE_ID_TA_LEVEL_15                  = 126;
-                           * 
-                           */
-
-                          // Skip any accounts with roles we will ignore.
-                          if ($role_id == '109' || $role_id == '116' || $role_id == '129') {
-                            // \Drupal::logger('group_lms_user_sync')->info('Skipped: Did not sync @user from @ou to @groupname (@groupid) because LMS Role ID: @role_id.', [
-                            //   '@user' => $username,
-                            //   '@ou' => $ou,
-                            //   '@groupname' => $group_name,
-                            //   '@groupid' => $group_id,
-                            //   '@role_id' => $role_id,
-                            // ]);
-                          } else {
-
-                            $user_object = user_load_by_name($username);
-                            if (!$user_object) {
-                              $user_email = $username . '@uwaterloo.ca';
-                              $this->createNewUser($username, $user_email, $role_id);
-                            } else {
-                              // User exists - check if they have the appropriate Drupal system role.
-                              $this->ensureUserHasSystemRole($user_object, $role_id);
-                            }
-
-                            $this->enrollUser($group_id, $username, $role_id, $ou);
-                          } // end if role
-                        } // end $account loop
-                      } // end classList loop
-                    } // end if ClassList
-                  }
-                } // end request
-              } catch (\Exception $e) {
-                watchdog_exception('group_lms_user_sync', $e);
-                return FALSE;
+              if ($classList === FALSE) {
+                // Request failed after retries, skip this OU but continue with others.
+                $this->logger->error('Failed to fetch class list for OU @ou after retries', ['@ou' => $ou]);
+                continue;
               }
+
+              if (is_array($classList) && (count($classList) > 0)) {
+
+
+
+                $this->unEnrollUser($group_id, $classList, $ou);
+                foreach ($classList as $grouping) {
+                  foreach ($grouping as $account) {
+                    /**
+                     * stdClass Object (
+                     * [id] => 84774
+                     * [user_id] => onlin001
+                     * [username] => onlin001
+                     * [display_name] => Guest Account
+                     * [first_name] => Guest
+                     * [last_name] => Account
+                     * [role] => stdClass Object(
+                     *   [id] => 129
+                     * ))
+                     */
+
+                    /* First, check if the user (identified by Email or Username) exists, if not, create the user */
+                    $id = $account->username;
+                    $user_id = $account->user_id;
+                    $username = $account->username;
+                    $display_name = $account->display_name;
+                    $first_name = $account->first_name;
+                    $last_name = $account->last_name;
+                    $role_id = $account->role->id;
+
+                    
+
+
+                    // \Drupal::logger('group_lms_user_sync')->info('Username @uname.', [
+                    //   '@uname' => $role_id,
+                    // ]);
+
+                    /**
+                     * ROLE_ID_ADMINISTRATOR                = 102;
+                     * ROLE_ID_INSTRUCTOR                   = 106;
+                     * ROLE_ID_STUDENT                      = 107;
+                     * ROLE_ID_COURSE_MANAGER               = 110;
+                     * ROLE_ID_CEL_COURSE_EDITOR            = 111;
+                     * ROLE_ID_TA_LEVEL_4                   = 112;
+                     * ROLE_ID_STAFF                        = 113;
+                     * ROLE_ID_TA_LEVEL_1                   = 114;
+                     * ROLE_ID_TA_LEVEL_3                   = 115;
+                     * ROLE_ID_TA_LEVEL_2                   = 117;
+                     * ROLE_ID_FUTURE_STUDENT               = 124;
+                     * ROLE_ID_TA_LEVEL_15                  = 126;
+                     * 
+                     */
+
+                    // Skip any accounts with roles we will ignore.
+                    if ($role_id == '109' || $role_id == '116' || $role_id == '129') {
+                      // \Drupal::logger('group_lms_user_sync')->info('Skipped: Did not sync @user from @ou to @groupname (@groupid) because LMS Role ID: @role_id.', [
+                      //   '@user' => $username,
+                      //   '@ou' => $ou,
+                      //   '@groupname' => $group_name,
+                      //   '@groupid' => $group_id,
+                      //   '@role_id' => $role_id,
+                      // ]);
+                    } else {
+
+                      $user_object = user_load_by_name($username);
+                      if (!$user_object) {
+                        $user_email = $username . '@uwaterloo.ca';
+                        $this->createNewUser($username, $user_email, $role_id);
+                      } else {
+                        // User exists - check if they have the appropriate Drupal system role.
+                        $this->ensureUserHasSystemRole($user_object, $role_id);
+                      }
+
+                      $this->enrollUser($group_id, $username, $role_id, $ou);
+                    } // end if role
+                  } // end $account loop
+                } // end classList loop
+              } // end if ClassList
             }
           }
         }
@@ -651,6 +635,80 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
     // check if $group_role is correct based on $role_id.
 
     // if mismatched, change user's group role.
+  }
+
+  /**
+   * Fetch class list from API with retry logic for timeouts.
+   *
+   * @param \GuzzleHttp\Client $client
+   *   The HTTP client.
+   * @param string $url
+   *   The API URL to fetch.
+   * @param int $max_retries
+   *   Maximum number of retry attempts.
+   *
+   * @return array|false
+   *   The decoded class list array on success, or FALSE on failure.
+   */
+  private function fetchClassListWithRetry($client, $url, $max_retries = 3)
+  {
+    // Retry delays: 30 seconds after first failure, 2 minutes after second.
+    $retry_delays = [30, 120];
+    $attempt = 0;
+
+    while ($attempt < $max_retries) {
+      try {
+        $request = $client->get($url, [
+          'http_errors' => TRUE,
+          'verify' => FALSE,
+          'timeout' => 300,
+          'connect_timeout' => 30,
+          'headers' => [
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
+          ],
+        ]);
+
+        if (!empty($request) && $request->getBody()) {
+          return json_decode($request->getBody());
+        }
+
+        return [];
+
+      } catch (\GuzzleHttp\Exception\ConnectException $e) {
+        // Connection timeout - retry.
+        $attempt++;
+        $this->logger->warning('API request timeout (attempt @attempt/@max): @url', [
+          '@attempt' => $attempt,
+          '@max' => $max_retries,
+          '@url' => $url,
+        ]);
+
+        if ($attempt < $max_retries) {
+          sleep($retry_delays[$attempt - 1]);
+        }
+
+      } catch (\GuzzleHttp\Exception\RequestException $e) {
+        // Other request errors - retry.
+        $attempt++;
+        $this->logger->warning('API request failed (attempt @attempt/@max): @message', [
+          '@attempt' => $attempt,
+          '@max' => $max_retries,
+          '@message' => $e->getMessage(),
+        ]);
+
+        if ($attempt < $max_retries) {
+          sleep($retry_delays[$attempt - 1]);
+        }
+
+      } catch (\Exception $e) {
+        // Unexpected error - log and fail immediately.
+        watchdog_exception('group_lms_user_sync', $e);
+        return FALSE;
+      }
+    }
+
+    return FALSE;
   }
 
   /**
