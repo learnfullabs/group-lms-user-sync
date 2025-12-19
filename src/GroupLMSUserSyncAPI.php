@@ -278,6 +278,9 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
                             if (!$user_object) {
                               $user_email = $username . '@uwaterloo.ca';
                               $this->createNewUser($username, $user_email, $role_id);
+                            } else {
+                              // User exists - check if they have the appropriate Drupal system role.
+                              $this->ensureUserHasSystemRole($user_object, $role_id);
                             }
 
                             $this->enrollUser($group_id, $username, $role_id, $ou);
@@ -648,6 +651,36 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
     // check if $group_role is correct based on $role_id.
 
     // if mismatched, change user's group role.
+  }
+
+  /**
+   * Ensure an existing user has the appropriate Drupal system role.
+   *
+   * If the user has no roles (other than 'authenticated') and is a student,
+   * assign the student role.
+   *
+   * @param \Drupal\user\Entity\User $user
+   *   The user entity.
+   * @param string $lms_role_id
+   *   The LMS role ID to map.
+   */
+  private function ensureUserHasSystemRole($user, $lms_role_id)
+  {
+    // Only map student roles.
+    $student_role_ids = [107, 114, 126, 117, 115, 112, 124];
+
+    if (!in_array((int) $lms_role_id, $student_role_ids)) {
+      return;
+    }
+
+    // Get the user's current roles (excluding 'authenticated' which all users have).
+    $current_roles = $user->getRoles(TRUE);
+
+    // If user has no custom roles, assign the student role.
+    if (empty($current_roles)) {
+      $user->addRole('student');
+      $user->save();
+    }
   }
 
   /**
