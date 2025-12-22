@@ -71,7 +71,7 @@ class GroupLmsSyncBatchWorker extends QueueWorkerBase implements ContainerFactor
    */
   public function processItem($data) {
     $offset = $data['offset'] ?? 0;
-    $limit = $data['limit'] ?? 5;
+    $limit = $data['limit'] ?? 10;
 
     $this->logger->info('Processing batch: offset @offset, limit @limit', [
       '@offset' => $offset,
