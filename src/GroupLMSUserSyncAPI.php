@@ -141,37 +141,66 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
   }
 
   /**
+   * Batch size for processing groups to prevent memory exhaustion.
+   *
+   * @var int
+   */
+  protected const BATCH_SIZE = 5;
+
+  /**
    * Sync users/class groups from the LMI AP Endpoint to Drupal Groups.
+   *
+   * @param int|null $batch_offset
+   *   Optional offset for batch processing. If NULL, processes all groups.
+   * @param int|null $batch_limit
+   *   Optional limit for batch processing. If NULL, uses default BATCH_SIZE.
    *
    * @return int
    *   TRUE on success or FALSE on error
    */
-  public function syncUsersToGroups(): int
+  public function syncUsersToGroups(?int $batch_offset = NULL, ?int $batch_limit = NULL): int
   {
     if (isset($this->endpoint_id) && !empty($this->endpoint_id)) {
 
-      $this->endpoint_publickey = $this->repository->getKey($this->endpoint_publickey)->getKeyValue();
+      // Get the key entities from Key module and check if they exist.
+      $publickey_entity = $this->repository->getKey($this->endpoint_publickey);
+      $privatekey_entity = $this->repository->getKey($this->endpoint_privatekey);
 
-      $this->endpoint_privatekey = $this->repository->getKey($this->endpoint_privatekey)->getKeyValue();
+      if (!$publickey_entity || !$privatekey_entity) {
+        $this->logger->error('API keys not found in Key module. Public key "@public" or private key "@private" does not exist.', [
+          '@public' => $this->endpoint_publickey,
+          '@private' => $this->endpoint_privatekey,
+        ]);
+        return FALSE;
+      }
 
-      $this->endpoint_hashed_privatekey = hash('sha256', $this->endpoint_privatekey . 'json');
+      // Get the actual key values from Key module.
+      $public_key_value = $publickey_entity->getKeyValue();
+      $private_key_value = $privatekey_entity->getKeyValue();
 
-      //$this->endpoint_data = $this->repository->getKey($this->endpoint_id)->getKeyValue();
+      $this->endpoint_hashed_privatekey = hash('sha256', $private_key_value . 'json');
 
-      if (isset($this->endpoint_publickey) && isset($this->endpoint_privatekey)) {
+      if (!empty($public_key_value) && !empty($private_key_value)) {
         // Create an httpClient Object that will be used for all the requests.
         $client = \Drupal::httpClient();
 
-        $request_url = $this->endpoint_url . $this->endpoint_publickey . '/hash/' . $this->endpoint_hashed_privatekey . '/format/json/unit_id/';
+        $request_url = $this->endpoint_url . $public_key_value . '/hash/' . $this->endpoint_hashed_privatekey . '/format/json/unit_id/';
 
 
         // Get a list of all the Groups in Drupal
         $group_ids = $this->getGroupIds();
+
+        // Apply batch offset/limit if provided.
+        if ($batch_offset !== NULL) {
+          $limit = $batch_limit ?? self::BATCH_SIZE;
+          $group_ids = array_slice($group_ids, $batch_offset, $limit);
+        }
     
 
         /* Loop through all the Group OUs, make an API call for each Group OU
          * add new members if any, don't add members to the Group if they are
          * members already */
+        $groups_processed = 0;
         foreach ($group_ids as $group_id) {
 
           // Get Group metadata.
@@ -280,6 +309,10 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
               } // end if ClassList
             }
           }
+
+          // Clear entity cache after each group to free memory.
+          $groups_processed++;
+          $this->clearEntityMemory();
         }
       } else {
         // Endpoint URL was not set or is empty
@@ -293,6 +326,56 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
     }
 
     return TRUE;
+  }
+
+  /**
+   * Clear entity memory caches to prevent memory exhaustion.
+   *
+   * This resets the entity memory cache and runs garbage collection
+   * to free up memory during long-running sync operations.
+   */
+  protected function clearEntityMemory(): void
+  {
+    // Reset the entity memory cache for groups, users, and group_relationship.
+    $entity_type_manager = \Drupal::entityTypeManager();
+    $entity_type_manager->getStorage('group')->resetCache();
+    $entity_type_manager->getStorage('user')->resetCache();
+    $entity_type_manager->getStorage('group_relationship')->resetCache();
+    
+    // Also clear the group_log storage if it exists.
+    if ($entity_type_manager->hasDefinition('group_log')) {
+      $entity_type_manager->getStorage('group_log')->resetCache();
+    }
+
+    // Clear static caches.
+    drupal_static_reset();
+
+    // Force garbage collection.
+    if (function_exists('gc_collect_cycles')) {
+      gc_collect_cycles();
+    }
+  }
+
+  /**
+   * Get the total count of groups to sync.
+   *
+   * @return int
+   *   The total number of groups with LMS sync enabled.
+   */
+  public function getGroupCount(): int
+  {
+    return count($this->getGroupIds());
+  }
+
+  /**
+   * Get the batch size constant.
+   *
+   * @return int
+   *   The batch size.
+   */
+  public function getBatchSize(): int
+  {
+    return self::BATCH_SIZE;
   }
 
 /**

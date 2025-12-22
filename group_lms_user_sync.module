@@ -15,22 +15,43 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 
 /**
  * Implements hook_cron().
+ *
+ * Queues group sync tasks in batches to prevent memory exhaustion.
  */
 function group_lms_user_sync_cron() {
     // Get the GroupLMSUserSyncAPI service.
     $sync_service = \Drupal::service('group_lms_user_sync.api');
 
-    // Run the syncUsersToGroups method.
-    $result = $sync_service->syncUsersToGroups();
-  
-    // Log the result.
-    \Drupal::logger('group_lms_user_sync')->info('Cron executed syncUsersToGroups. Result: @result', ['@result' => $result]);
-}
+    // Get total groups and batch size.
+    $total_groups = $sync_service->getGroupCount();
+    $batch_size = $sync_service->getBatchSize();
 
-/**
- * Implements hook_cron_queue_info().
- */
-function group_lms_user_sync_cron_queue_info() {
+    if ($total_groups === 0) {
+      \Drupal::logger('group_lms_user_sync')->info('No groups to sync.');
+      return;
+    }
+
+    // Queue batches for processing.
+    $queue = \Drupal::queue('group_lms_user_sync_batch');
+    
+    // Only queue if the queue is empty (prevent duplicate queuing).
+    if ($queue->numberOfItems() === 0) {
+      for ($offset = 0; $offset < $total_groups; $offset += $batch_size) {
+        $queue->createItem([
+          'offset' => $offset,
+          'limit' => $batch_size,
+        ]);
+      }
+      \Drupal::logger('group_lms_user_sync')->info('Queued @count batches for @total groups (batch size: @size).', [
+        '@count' => ceil($total_groups / $batch_size),
+        '@total' => $total_groups,
+        '@size' => $batch_size,
+      ]);
+    } else {
+      \Drupal::logger('group_lms_user_sync')->info('Sync queue already has @count items pending.', [
+        '@count' => $queue->numberOfItems(),
+      ]);
+    }
 }
 
 /**
