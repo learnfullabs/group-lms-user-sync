@@ -536,12 +536,12 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
 
     // Get Group
     $group = Group::load($group_id);
-    $group_name = $group->label();
 
     if (!$group) {
       // Check if Group exists
       $this->logger->error("Failed to load group using gid @gid", ['@gid' => $group_id]);
     } else {
+      $group_name = $group->label();
       $user_obj = user_load_by_name($username);
 
       // if (!$user_obj) {
@@ -617,10 +617,19 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
               '@roleid' => $role_id,
               '@user' => $username
             ]);
-            break;
+            return;
         } //end switch
 
-        $group_relationship = $group->getMember($user_obj)->getGroupRelationship();
+        $membership = $group->getMember($user_obj);
+        if (!$membership) {
+          $this->logger->error("Failed to load group membership for user @username in group @gid after enrollment.", [
+            '@username' => $username,
+            '@gid' => $group_id,
+          ]);
+          return;
+        }
+
+        $group_relationship = $membership->getGroupRelationship();
         $group_relationship->field_course_ou->value = $ou;
         $group_relationship->save();
 
@@ -661,6 +670,10 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
 
     // Get Group
     $group = Group::load($group_id);
+    if (!$group) {
+      $this->logger->error("Failed to load group with ID @group_id during unenrollment.", ['@group_id' => $group_id]);
+      return;
+    }
     $group_name = $group->label();
 
     // Get all current group members.
@@ -684,7 +697,16 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
     foreach ($current_members as $member) {
       $user = $member->getUser();
       $username = $user->getAccountName();
-      $group_member_relationship = $group->getMember($user)->getGroupRelationship();
+      $membership = $group->getMember($user);
+      if (!$membership) {
+        $this->logger->warning("Skipping unenrollment check for user @username in group @gid because no membership could be loaded.", [
+          '@username' => $username,
+          '@gid' => $group_id,
+        ]);
+        continue;
+      }
+
+      $group_member_relationship = $membership->getGroupRelationship();
       $group_member_ou_field = $group_member_relationship->field_course_ou->value;
 
       if ($group_member_ou_field === $ou) {
