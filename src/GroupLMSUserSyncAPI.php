@@ -591,7 +591,6 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
             break;
 
           // EDITOR
-          case 112: // ROLE_ID_TA_LEVEL_4
           case 113: // ROLE_ID_STAFF
             $group->addMember($user_obj, ['group_roles' => ['course_synced-content_editor']]);
             break;
@@ -608,6 +607,7 @@ class GroupLMSUserSyncAPI implements ContainerInjectionInterface
           case 126: // ROLE_ID_TA_LEVEL_15
           case 117: // ROLE_ID_TA_LEVEL_2
           case 115: // ROLE_ID_TA_LEVEL_3
+          case 112: // ROLE_ID_TA_LEVEL_4
           case 124: // ROLE_ID_FUTURE_STUDENT
             $group->addMember($user_obj, ['group_roles' => ['course_synced-member']]);
             break;

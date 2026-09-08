@@ -4,3 +4,8 @@ services:
     arguments: ['@group_lms_user_sync.api']
     tags:
       - { name: drush.command }
+  group_lms_user_sync.report_commands:
+    class: \Drupal\group_lms_user_sync\Drush\GroupLMSReportCommands
+    arguments: ['@entity_type.manager', '@database', '@date.formatter']
+    tags:
+      - { name: drush.command }
